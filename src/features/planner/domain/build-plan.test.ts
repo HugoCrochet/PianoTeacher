@@ -132,6 +132,18 @@ describe("buildPlan", () => {
     expect(new Set(ids).size).toBe(ids.length);
   });
 
+  it("fait tourner les exercices d'un petit domaine au lieu de reproposer toujours le même", () => {
+    const small = [1, 2, 3].map((n) => exercise("technique", n));
+    const tasks = buildPlan(input({ exercises: [...small, ...exercises.filter((e) => e.domain !== "technique")] }));
+    const technique = tasks.filter((t) => t.domain === "technique").map((t) => t.exerciseId);
+    expect(technique.length).toBeGreaterThan(3);
+    const counts = small.map((e) => technique.filter((id) => id === e.id).length);
+    expect(Math.max(...counts) - Math.min(...counts)).toBeLessThanOrEqual(1);
+    technique.forEach((id, i) => {
+      if (i > 0) expect(id).not.toBe(technique[i - 1]);
+    });
+  });
+
   it("ne replanifie jamais le passé", () => {
     const from = addDays(WEEK, 3);
     expect(buildPlan(input({ fromDate: from })).every((t) => t.date >= from)).toBe(true);

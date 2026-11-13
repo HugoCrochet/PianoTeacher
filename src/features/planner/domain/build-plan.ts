@@ -193,7 +193,7 @@ export function buildPlan(input: PlannerInput): DraftTask[] {
   const pieces = [...input.activePieces].sort(
     (a, b) => TIER_ORDER[a.tier] - TIER_ORDER[b.tier] || a.title.localeCompare(b.title, "fr") || a.id.localeCompare(b.id),
   );
-  const usedExercises = new Set<string>();
+  const uses = new Map<string, number>();
   const replanned = new Set<string>();
   const tasks: DraftTask[] = [];
   let cursor = 0;
@@ -233,17 +233,18 @@ export function buildPlan(input: PlannerInput): DraftTask[] {
       const atLevel = inDomain.filter((e) => e.level <= maxLevel);
       const pool = atLevel.length > 0 ? atLevel : inDomain;
       const scored = pool.map((e) => scoreExercise(e, date, input, userLevel));
-      // Pas deux fois le même exercice dans la semaine, sauf un « à revoir » arrivé à échéance (une fois).
-      const fresh = scored.filter(
-        (s) => !usedExercises.has(s.exercise.id) || (s.score >= 100 && !replanned.has(s.exercise.id)),
-      );
-      const candidates = (fresh.length > 0 ? fresh : scored).sort(
-        (a, b) => b.score - a.score || a.exercise.slug.localeCompare(b.exercise.slug),
-      );
+      // Rotation : on prend d'abord les exercices les moins utilisés cette semaine, pour ne pas
+      // reproposer le même tant que les autres n'ont pas été joués. Seule exception : un
+      // « à revoir » arrivé à échéance revient une fois, même s'il a déjà été joué.
+      const useCount = (s: Scored) => uses.get(s.exercise.id) ?? 0;
+      const leastUsed = Math.min(...scored.map(useCount));
+      const candidates = scored
+        .filter((s) => useCount(s) === leastUsed || (s.score >= 100 && !replanned.has(s.exercise.id)))
+        .sort((a, b) => b.score - a.score || a.exercise.slug.localeCompare(b.exercise.slug));
       const pick = candidates[0];
       if (!pick) return;
-      if (usedExercises.has(pick.exercise.id)) replanned.add(pick.exercise.id);
-      usedExercises.add(pick.exercise.id);
+      if (useCount(pick) > 0 && pick.score >= 100) replanned.add(pick.exercise.id);
+      uses.set(pick.exercise.id, useCount(pick) + 1);
       if (!generate) return;
 
       const bpm = bpmProgress(
