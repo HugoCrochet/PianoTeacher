@@ -17,12 +17,12 @@ Livraison par tranches verticales. Les fonctionnalités sont décrites dans [PRO
 8. Déploiement Vercel.
 
 **Fini quand**
-- [ ] Connexion et déconnexion fonctionnent ; une page privée sans session redirige vers `/connexion`.
-- [ ] Le résultat et le BPM sont validés côté serveur et persistent après rechargement.
+- [x] Connexion et déconnexion fonctionnent ; une page privée sans session redirige vers `/connexion`.
+- [x] Le résultat et le BPM sont validés côté serveur et persistent après rechargement.
 - [ ] Le résultat apparaît sur un second appareil connecté au même compte.
-- [ ] Un test prouve qu'un autre utilisateur ne lit pas ces données (RLS).
-- [ ] Aucun secret dans le bundle client.
-- [ ] Parcours utilisable à 390 px, sur iPad et sur desktop.
+- [x] Un test prouve qu'un autre utilisateur ne lit pas ces données (RLS).
+- [x] Aucun secret dans le bundle client.
+- [x] Parcours utilisable à 390 px, sur iPad et sur desktop.
 - [ ] Démontré en conditions réelles (la maquette seule ne compte pas).
 
 ## Étape 2 — MVP
@@ -40,17 +40,19 @@ Ordre d'implémentation :
 9. **Durcissement** : E2E Playwright, revue sécurité.
 
 **Fini quand**
-- [ ] Toutes les données personnelles sont en PostgreSQL, protégées par RLS (tables et Storage).
-- [ ] Le plan du jour respecte la durée configurée.
-- [ ] Le plan de la semaine couvre les 5 domaines.
-- [ ] Une tâche `à retravailler` revient plus tard, sans dette ; une tâche manquée n'est pas reportée.
-- [ ] La cible BPM n'augmente qu'après 3 réussites consécutives, et la raison est affichée.
-- [ ] Les modifications manuelles du programme survivent à une régénération (ou sont remplacées après confirmation).
-- [ ] Les PDF s'importent, se consultent et se suppriment de façon privée.
-- [ ] Les statistiques ne reflètent que les logs réels.
-- [ ] Les données essentielles s'exportent.
+- [x] Toutes les données personnelles sont en PostgreSQL, protégées par RLS (tables et Storage).
+- [x] Le plan du jour respecte la durée configurée.
+- [x] Le plan de la semaine couvre les 5 domaines.
+- [x] Une tâche `à retravailler` revient plus tard, sans dette ; une tâche manquée n'est pas reportée.
+- [x] La cible BPM n'augmente qu'après 3 réussites consécutives, et la raison est affichée.
+- [x] Les modifications manuelles du programme survivent à une régénération (ou sont remplacées après confirmation).
+- [x] Les PDF s'importent, se consultent et se suppriment de façon privée.
+- [x] Les statistiques ne reflètent que les logs réels.
+- [x] Les données essentielles s'exportent.
 - [ ] Fonctionne sur Safari iPad et un navigateur Mac récent.
 - [ ] Lint, typecheck, tests et build passent en CI.
+
+> État au 13 novembre 2026 : cases cochées = vérifié par les tests automatiques (unitaires, RLS, navigateur) sur Supabase local, et déploiement en ligne sur https://piano-coach-olive.vercel.app. Restent à faire par l'utilisateur : essai sur un vrai iPad et un second appareil ; la CI tournera au premier push sur GitHub.
 
 ## Tests attendus
 
