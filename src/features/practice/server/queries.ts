@@ -1,0 +1,116 @@
+import "server-only";
+import type { IsoDate } from "@/lib/dates";
+import type { Domain } from "@/lib/domain/domains";
+import type { ServerClient } from "@/lib/supabase/server";
+
+export interface TaskView {
+  id: string;
+  date: IsoDate;
+  position: number;
+  domain: Domain;
+  title: string;
+  detail: string;
+  objective: string;
+  instructions: string;
+  href: string;
+  plannedMinutes: number;
+  targetBpm: number | null;
+  reason: string;
+  status: "planned" | "done" | "skipped";
+  isUserModified: boolean;
+  exerciseId: string | null;
+  pieceId: string | null;
+}
+
+const TASK_COLUMNS = `
+  id, task_date, position, domain, planned_minutes, target_bpm, reason, status, is_user_modified,
+  exercise_id, user_repertoire_id,
+  exercise:exercises ( slug, title, objective, instructions, key_signature ),
+  piece:user_repertoire ( id, title, composer, current_step )
+` as const;
+
+/** Tâches planifiées entre deux dates (incluses), dans l'ordre. */
+export async function getTasks(supabase: ServerClient, from: IsoDate, to: IsoDate = from): Promise<TaskView[]> {
+  const { data, error } = await supabase
+    .from("planned_tasks")
+    .select(TASK_COLUMNS)
+    .gte("task_date", from)
+    .lte("task_date", to)
+    .order("task_date")
+    .order("position");
+  if (error) throw new Error(`Chargement des tâches impossible : ${error.message}`);
+  return data.map((t) => ({
+    id: t.id,
+    date: t.task_date,
+    position: t.position,
+    domain: t.domain as Domain,
+    title: t.exercise?.title ?? t.piece?.title ?? "Tâche",
+    detail: t.exercise
+      ? (t.exercise.key_signature ?? "")
+      : [t.piece?.composer, t.piece?.current_step].filter(Boolean).join(", "),
+    objective: t.exercise?.objective ?? (t.piece?.current_step ? `Étape en cours : ${t.piece.current_step}` : ""),
+    instructions:
+      t.exercise?.instructions ??
+      "Travaille lentement le passage en cours, mains séparées si besoin, puis assemble. Termine en jouant ce que tu sais déjà pour le plaisir.",
+    href: t.exercise ? `/exercices/${t.exercise.slug}` : `/repertoire/${t.piece?.id ?? ""}`,
+    plannedMinutes: t.planned_minutes,
+    targetBpm: t.target_bpm,
+    reason: t.reason,
+    status: t.status as TaskView["status"],
+    isUserModified: t.is_user_modified,
+    exerciseId: t.exercise_id,
+    pieceId: t.user_repertoire_id,
+  }));
+}
+
+export interface SessionView {
+  id: string;
+  status: "in_progress" | "completed";
+  actualMinutes: number;
+}
+
+export async function getSession(supabase: ServerClient, date: IsoDate): Promise<SessionView | null> {
+  const { data } = await supabase
+    .from("practice_sessions")
+    .select("id, status, actual_minutes")
+    .eq("session_date", date)
+    .maybeSingle();
+  return data ? { id: data.id, status: data.status as SessionView["status"], actualMinutes: data.actual_minutes } : null;
+}
+
+export interface LogView {
+  id: string;
+  date: IsoDate;
+  practicedAt: string;
+  domain: Domain;
+  title: string;
+  minutes: number;
+  bpm: number | null;
+  result: "success" | "retry";
+  exerciseId: string | null;
+  pieceId: string | null;
+}
+
+/** Résultats réellement enregistrés depuis `from` (ordre chronologique). */
+export async function getLogs(supabase: ServerClient, from: IsoDate): Promise<LogView[]> {
+  const { data, error } = await supabase
+    .from("practice_logs")
+    .select(
+      "id, practice_date, practiced_at, domain, actual_minutes, bpm, result, exercise_id, user_repertoire_id, exercise:exercises ( title ), piece:user_repertoire ( title )",
+    )
+    .gte("practice_date", from)
+    .order("practiced_at", { ascending: true });
+  if (error) throw new Error(`Chargement de l'historique impossible : ${error.message}`);
+  return data.map((l) => ({
+    id: l.id,
+    date: l.practice_date,
+    practicedAt: l.practiced_at,
+    domain: l.domain as Domain,
+    title: l.exercise?.title ?? l.piece?.title ?? "—",
+    minutes: l.actual_minutes,
+    bpm: l.bpm,
+    result: l.result as LogView["result"],
+    exerciseId: l.exercise_id,
+    pieceId: l.user_repertoire_id,
+  }));
+}
