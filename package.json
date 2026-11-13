@@ -12,7 +12,8 @@
     "test:db": "supabase test db",
     "db:start": "supabase start -x studio,imgproxy,edge-runtime,logflare,vector,realtime,mailpit,supavisor,postgres-meta",
     "db:reset": "supabase db reset",
-    "db:types": "supabase gen types typescript --local > src/lib/supabase/database.types.ts"
+    "db:types": "supabase gen types typescript --local > src/lib/supabase/database.types.ts",
+    "test:e2e": "playwright test"
   },
   "dependencies": {
     "@supabase/ssr": "0.12.7",
@@ -28,6 +29,7 @@
     "zod": "4.6.7"
   },
   "devDependencies": {
+    "@playwright/test": "^1.65.0",
     "@tailwindcss/turbopack": "4.3.3",
     "@types/node": "^20",
     "@types/react": "^19",

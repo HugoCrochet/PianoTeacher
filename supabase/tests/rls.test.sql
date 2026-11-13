@@ -60,8 +60,8 @@ select is((select count(*)::int from storage.objects where bucket_id = 'personal
 update public.practice_logs set bpm = 200;
 delete from public.practice_sessions;
 reset role;
-select is((select bpm::int from public.practice_logs limit 1), 72, 'B n''a pas pu modifier le résultat de A');
-select is((select count(*)::int from public.practice_sessions), 1, 'B n''a pas pu supprimer la séance de A');
+select is((select bpm::int from public.practice_logs where user_id = '00000000-0000-0000-0000-00000000000a'), 72, 'B n''a pas pu modifier le résultat de A');
+select is((select count(*)::int from public.practice_sessions where user_id = '00000000-0000-0000-0000-00000000000a'), 1, 'B n''a pas pu supprimer la séance de A');
 
 -- ----- Anonyme : aucun accès -----
 set local role anon;
