@@ -1,0 +1,27 @@
+# Dépendances et builds
+node_modules/
+.next/
+out/
+build/
+*.tsbuildinfo
+next-env.d.ts
+
+# Environnement (seul .env.example est versionné)
+.env*
+!.env.example
+
+# Supabase local
+supabase/.temp/
+supabase/.branches/
+
+# Tests
+coverage/
+playwright-report/
+test-results/
+
+# Réglages personnels Claude Code
+.claude/settings.local.json
+
+# Système / éditeur
+.DS_Store
+.vercel/

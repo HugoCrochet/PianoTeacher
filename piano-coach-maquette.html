@@ -1,0 +1,335 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Piano Coach — maquette</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400;12..96,500;12..96,700&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg: #ffffff;
+  --stage: #eceef1;
+  --ink: #000000;
+  --ink-2: #55585e;
+  --line: #e6e7ea;
+  --mint: #d4f0e2;
+  --lilac: #e4defa;
+  --butter: #fbefc2;
+  --peach: #fde0d3;
+  --sky: #dcebfb;
+  --btn-bg: #000000;
+  --btn-ink: #ffffff;
+  color-scheme: light;
+}
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg: #17181b;
+    --stage: #0d0e10;
+    --ink: #f5f5f4;
+    --ink-2: #a6a8ad;
+    --line: #2a2c30;
+    --mint: #1f3b2f;
+    --lilac: #2f2a47;
+    --butter: #3f3820;
+    --peach: #43291f;
+    --sky: #1f3045;
+    --btn-bg: #f5f5f4;
+    --btn-ink: #17181b;
+    color-scheme: dark;
+  }
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+html, body { height: 100%; }
+body {
+  background: var(--stage);
+  color: var(--ink);
+  font-family: "Bricolage Grotesque", "Avenir Next", "Segoe UI", system-ui, sans-serif;
+  display: grid;
+  place-items: center;
+  padding: 24px;
+  -webkit-font-smoothing: antialiased;
+}
+/* Cadre iPad paysage (1180×820), s'adapte sur écran plus petit */
+.device {
+  width: min(1180px, 100%);
+  aspect-ratio: 1180 / 820;
+  background: var(--bg);
+  border-radius: 28px;
+  overflow: hidden;
+  position: relative;
+}
+@media (max-width: 760px) {
+  body { padding: 0; }
+  .device { aspect-ratio: auto; min-height: 100%; border-radius: 0; }
+}
+.screen {
+  position: absolute; inset: 0;
+  padding: 44px 56px 40px;
+  display: flex; flex-direction: column;
+  overflow-y: auto;
+}
+.screen[hidden] { display: none; }
+@media (max-width: 760px) { .screen { position: static; padding: 28px 20px; } }
+
+header.top {
+  display: flex; justify-content: space-between; align-items: baseline;
+  margin-bottom: 32px;
+}
+h1 { font-size: 40px; font-weight: 700; letter-spacing: -0.02em; line-height: 1.1; }
+.sub { color: var(--ink-2); font-size: 17px; margin-top: 6px; }
+.streak { font-size: 16px; color: var(--ink-2); white-space: nowrap; }
+.streak b { color: var(--ink); font-weight: 700; }
+
+/* Accueil : 4 tuiles */
+.tiles {
+  flex: 1;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  grid-template-rows: 1fr 1fr;
+  gap: 18px;
+  min-height: 0;
+}
+@media (max-width: 760px) { .tiles { grid-template-columns: 1fr; grid-template-rows: none; } }
+.tile {
+  all: unset;
+  cursor: pointer;
+  border-radius: 24px;
+  padding: 28px 30px;
+  display: flex; flex-direction: column; justify-content: space-between;
+  min-height: 170px;
+  color: var(--ink);
+}
+.tile:focus-visible, .row:focus-visible, .back:focus-visible, .cta:focus-visible { outline: 3px solid var(--ink); outline-offset: 3px; }
+.tile:active { transform: scale(0.99); }
+.tile svg { width: 40px; height: 40px; }
+.tile h2 { font-size: 28px; font-weight: 700; letter-spacing: -0.01em; }
+.tile p { font-size: 17px; color: var(--ink-2); margin-top: 4px; max-width: 36ch; }
+.t-today { background: var(--mint); }
+.t-prog { background: var(--lilac); }
+.t-rep { background: var(--butter); }
+.t-tech { background: var(--peach); }
+
+/* Entrée Parcours, séparée */
+.path {
+  all: unset; cursor: pointer;
+  margin-top: 18px;
+  display: flex; align-items: center; gap: 22px;
+  padding: 20px 26px;
+  border: 1.5px solid var(--line);
+  border-radius: 20px;
+}
+.path:focus-visible { outline: 3px solid var(--ink); outline-offset: 3px; }
+.path svg { width: 32px; height: 32px; flex: none; }
+.path .txt { flex: 1; min-width: 0; }
+.path strong { font-size: 19px; font-weight: 700; display: block; }
+.path span { font-size: 15px; color: var(--ink-2); }
+.bar { width: 180px; height: 8px; border-radius: 4px; background: var(--line); flex: none; overflow: hidden; }
+.bar i { display: block; height: 100%; width: 42%; background: var(--ink); border-radius: 4px; }
+@media (max-width: 760px) { .bar { display: none; } }
+
+/* Pages secondaires */
+.back {
+  all: unset; cursor: pointer;
+  font-size: 17px; color: var(--ink-2);
+  display: inline-flex; align-items: center; gap: 6px;
+  margin-bottom: 20px; align-self: flex-start;
+}
+.back svg { width: 18px; height: 18px; }
+.page-head { display: flex; align-items: center; gap: 18px; margin-bottom: 28px; }
+.badge { width: 64px; height: 64px; border-radius: 18px; display: grid; place-items: center; flex: none; }
+.badge svg { width: 32px; height: 32px; }
+.list { list-style: none; border-top: 1.5px solid var(--line); max-width: 760px; }
+.row {
+  display: flex; align-items: center; gap: 18px;
+  padding: 18px 4px;
+  border-bottom: 1.5px solid var(--line);
+  font-size: 18px;
+}
+.row .n { width: 28px; color: var(--ink-2); font-variant-numeric: tabular-nums; }
+.row .main { flex: 1; }
+.row .main small { display: block; font-size: 15px; color: var(--ink-2); margin-top: 2px; }
+.row .meta { color: var(--ink-2); font-size: 16px; white-space: nowrap; }
+.dot { width: 12px; height: 12px; border-radius: 50%; border: 1.5px solid var(--ink); flex: none; }
+.dot.full { background: var(--ink); }
+.row.done .main { color: var(--ink-2); text-decoration: line-through; text-decoration-thickness: 1px; }
+.cta {
+  all: unset; cursor: pointer;
+  margin-top: 28px; align-self: flex-start;
+  background: var(--btn-bg); color: var(--btn-ink);
+  font-size: 18px; font-weight: 500;
+  padding: 16px 30px; border-radius: 999px;
+}
+.week { display: flex; align-items: flex-end; gap: 14px; height: 140px; margin-bottom: 32px; max-width: 520px; }
+.week div { flex: 1; display: flex; flex-direction: column; align-items: center; gap: 8px; height: 100%; justify-content: flex-end; }
+.week i { width: 100%; border-radius: 10px; background: var(--lilac); display: block; }
+.week i.today { background: var(--ink); }
+.week span { font-size: 14px; color: var(--ink-2); }
+.split { display: grid; grid-template-columns: 1fr; gap: 0; }
+@media (prefers-reduced-motion: no-preference) {
+  .screen:not([hidden]) { animation: in .22s ease-out; }
+  @keyframes in { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
+}
+</style>
+</head>
+<body>
+
+<!-- Icônes -->
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <defs>
+    <symbol id="i-today" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M10 8.5v7l5.5-3.5z"/></symbol>
+    <symbol id="i-prog" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19V5"/><path d="M4 19h16"/><path d="M8 15l3.5-4 3 2.5L20 7"/></symbol>
+    <symbol id="i-rep" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18V5l11-2v13"/><circle cx="6.5" cy="18" r="2.5"/><circle cx="17.5" cy="16" r="2.5"/></symbol>
+    <symbol id="i-tech" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="M8 5v9M12 5v9M16 5v9"/><path d="M8 14v5M12 14v5M16 14v5"/></symbol>
+    <symbol id="i-path" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><circle cx="6" cy="18" r="2"/><circle cx="18" cy="6" r="2"/><path d="M8 18h6a3 3 0 0 0 0-6h-4a3 3 0 0 1 0-6h6"/></symbol>
+    <symbol id="i-back" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M15 5l-7 7 7 7"/></symbol>
+  </defs>
+</svg>
+
+<main class="device">
+
+  <!-- ACCUEIL -->
+  <section class="screen" id="home">
+    <header class="top">
+      <div>
+        <h1>Bonsoir Camille</h1>
+        <p class="sub">Ta séance du jour est prête, 25 minutes.</p>
+      </div>
+      <p class="streak"><b>12 jours</b> d’affilée</p>
+    </header>
+
+    <div class="tiles">
+      <button class="tile t-today" data-go="today">
+        <svg><use href="#i-today"/></svg>
+        <div><h2>Aujourd’hui</h2><p>Gammes, lecture en clé de fa et le prélude de Chopin.</p></div>
+      </button>
+      <button class="tile t-prog" data-go="prog">
+        <svg><use href="#i-prog"/></svg>
+        <div><h2>Progression</h2><p>3 h 40 de pratique cette semaine, 40 minutes de plus que la précédente.</p></div>
+      </button>
+      <button class="tile t-rep" data-go="rep">
+        <svg><use href="#i-rep"/></svg>
+        <div><h2>Répertoire</h2><p>4 morceaux en cours, 1 presque prêt.</p></div>
+      </button>
+      <button class="tile t-tech" data-go="tech">
+        <svg><use href="#i-tech"/></svg>
+        <div><h2>Exercices</h2><p>Technique, gammes, lecture et improvisation.</p></div>
+      </button>
+    </div>
+
+    <button class="path" data-go="path">
+      <svg><use href="#i-path"/></svg>
+      <div class="txt">
+        <strong>Parcours pédagogique</strong>
+        <span>Niveau 2, lecture en clé de fa : leçon 5 sur 12</span>
+      </div>
+      <div class="bar" aria-label="42 % du niveau 2"><i></i></div>
+    </button>
+  </section>
+
+  <!-- AUJOURD'HUI -->
+  <section class="screen" id="today" hidden>
+    <button class="back" data-go="home"><svg><use href="#i-back"/></svg>Accueil</button>
+    <div class="page-head">
+      <div class="badge t-today"><svg><use href="#i-today"/></svg></div>
+      <div><h1>Aujourd’hui</h1><p class="sub">25 minutes, dans cet ordre.</p></div>
+    </div>
+    <ol class="list">
+      <li class="row"><span class="n">1</span><span class="main">Échauffement<small>Gamme de sol majeur, mains séparées</small></span><span class="meta">4 min</span></li>
+      <li class="row"><span class="n">2</span><span class="main">Lecture<small>Leçon 5 du parcours, clé de fa</small></span><span class="meta">6 min</span></li>
+      <li class="row"><span class="n">3</span><span class="main">Technique<small>Arpèges de do, main gauche</small></span><span class="meta">5 min</span></li>
+      <li class="row"><span class="n">4</span><span class="main">Répertoire<small>Chopin, Prélude en mi mineur, mesures 9 à 16</small></span><span class="meta">10 min</span></li>
+    </ol>
+    <button class="cta">Commencer la séance</button>
+  </section>
+
+  <!-- PROGRESSION -->
+  <section class="screen" id="prog" hidden>
+    <button class="back" data-go="home"><svg><use href="#i-back"/></svg>Accueil</button>
+    <div class="page-head">
+      <div class="badge t-prog"><svg><use href="#i-prog"/></svg></div>
+      <div><h1>Progression</h1><p class="sub">3 h 40 cette semaine.</p></div>
+    </div>
+    <div class="week" aria-label="Minutes de pratique par jour">
+      <div><i style="height:55%"></i><span>Lun</span></div>
+      <div><i style="height:30%"></i><span>Mar</span></div>
+      <div><i style="height:70%"></i><span>Mer</span></div>
+      <div><i style="height:45%"></i><span>Jeu</span></div>
+      <div><i class="today" style="height:62%"></i><span>Ven</span></div>
+      <div><i style="height:4%"></i><span>Sam</span></div>
+      <div><i style="height:4%"></i><span>Dim</span></div>
+    </div>
+    <ul class="list">
+      <li class="row"><span class="main">Séances<small>Cette semaine</small></span><span class="meta">5 séances, 4 tâches à retravailler</span></li>
+      <li class="row"><span class="main">Gamme de sol majeur<small>Tempo de travail</small></span><span class="meta">72 BPM, +4 après 3 réussites</span></li>
+      <li class="row"><span class="main">Tempo de travail<small>Prélude en mi mineur</small></span><span class="meta">54 sur 60 visés</span></li>
+    </ul>
+  </section>
+
+  <!-- RÉPERTOIRE -->
+  <section class="screen" id="rep" hidden>
+    <button class="back" data-go="home"><svg><use href="#i-back"/></svg>Accueil</button>
+    <div class="page-head">
+      <div class="badge t-rep"><svg><use href="#i-rep"/></svg></div>
+      <div><h1>Répertoire</h1><p class="sub">4 morceaux en cours.</p></div>
+    </div>
+    <ul class="list">
+      <li class="row"><span class="main">Prélude en mi mineur, op. 28 no 4<small>Chopin</small></span><span class="meta">Mesures 9 à 16</span></li>
+      <li class="row"><span class="main">Gymnopédie no 1<small>Satie</small></span><span class="meta">Presque prêt</span></li>
+      <li class="row"><span class="main">Menuet en sol majeur<small>Petzold</small></span><span class="meta">Mains ensemble</span></li>
+      <li class="row"><span class="main">Comptine d’un autre été<small>Tiersen</small></span><span class="meta">Mains séparées</span></li>
+    </ul>
+    <button class="cta">Ajouter un morceau</button>
+  </section>
+
+  <!-- TECHNIQUE -->
+  <section class="screen" id="tech" hidden>
+    <button class="back" data-go="home"><svg><use href="#i-back"/></svg>Accueil</button>
+    <div class="page-head">
+      <div class="badge t-tech"><svg><use href="#i-tech"/></svg></div>
+      <div><h1>Exercices</h1><p class="sub">Des exercices courts, choisis selon ton niveau.</p></div>
+    </div>
+    <ul class="list">
+      <li class="row"><span class="main">Gammes majeures<small>Do, sol, ré, fa</small></span><span class="meta">4 sur 12</span></li>
+      <li class="row"><span class="main">Arpèges<small>Accords parfaits, deux octaves</small></span><span class="meta">2 sur 12</span></li>
+      <li class="row"><span class="main">Indépendance des mains<small>Basse d’Alberti contre mélodie</small></span><span class="meta">Niveau 1</span></li>
+      <li class="row"><span class="main">Lecture rapide<small>Clés de sol et de fa</small></span><span class="meta">Niveau 2</span></li>
+    </ul>
+  </section>
+
+  <!-- PARCOURS -->
+  <section class="screen" id="path" hidden>
+    <button class="back" data-go="home"><svg><use href="#i-back"/></svg>Accueil</button>
+    <div class="page-head">
+      <div class="badge t-sky" style="background:var(--sky)"><svg><use href="#i-path"/></svg></div>
+      <div><h1>Parcours pédagogique</h1><p class="sub">Niveau 2, lecture en clé de fa.</p></div>
+    </div>
+    <ol class="list">
+      <li class="row done"><span class="dot full"></span><span class="main">Le do central et ses voisins</span><span class="meta">Terminé</span></li>
+      <li class="row done"><span class="dot full"></span><span class="main">Les lignes de la clé de fa</span><span class="meta">Terminé</span></li>
+      <li class="row done"><span class="dot full"></span><span class="main">Les interlignes</span><span class="meta">Terminé</span></li>
+      <li class="row done"><span class="dot full"></span><span class="main">Lire les intervalles de tierce</span><span class="meta">Terminé</span></li>
+      <li class="row"><span class="dot"></span><span class="main">Les notes sous la portée<small>Leçon en cours</small></span><span class="meta">8 min</span></li>
+      <li class="row"><span class="dot"></span><span class="main">Deux mains, deux clés</span><span class="meta">10 min</span></li>
+    </ol>
+    <button class="cta">Continuer la leçon 5</button>
+  </section>
+
+</main>
+
+<script>
+  const screens = document.querySelectorAll('.screen');
+  function go(id) {
+    screens.forEach(s => s.hidden = s.id !== id);
+    const target = document.getElementById(id);
+    target.scrollTop = 0;
+    const focusable = target.querySelector('.back, .tile');
+    if (focusable) focusable.focus({ preventScroll: true });
+  }
+  document.addEventListener('click', e => {
+    const b = e.target.closest('[data-go]');
+    if (b) go(b.dataset.go);
+  });
+</script>
+</body>
+</html>
