@@ -32,29 +32,32 @@ flowchart LR
 
 ```text
 src/
+  proxy.ts                  # (ex-middleware) rafraîchit la session, redirige vers /connexion
   app/
     (public)/connexion/
     (protected)/            # layout qui exige une session
       page.tsx              # Accueil
-      aujourdhui/           # séance du jour
+      aujourdhui/           # séance du jour ; aujourdhui/seance = saisie des résultats
       programme/            # semaine
       exercices/[slug]/
-      repertoire/[id]/
+      repertoire/[id]/      # + nouveau/ ; [id]/partition = redirection vers l'URL signée
       parcours/
       progression/
       parametres/
-  components/               # UI partagée (ui/ = shadcn)
+      export/               # route GET : JSON complet ou CSV de l'historique
+  components/               # ui/ (primitives shadcn restylées), layout/, forms/
   features/
-    <feature>/              # planner, exercises, repertoire, practice, progress, curriculum
+    <feature>/              # planner, practice, curriculum, progress, repertoire, profile, auth
       domain/               # fonctions pures, sans Next ni Supabase — testées
-      server/               # repositories + server actions (validation Zod, auth)
-      components/
+      server/               # requêtes + server actions (validation Zod, auth)
+      *.tsx                 # composants propres à la feature
   lib/
-    supabase/               # client serveur, client navigateur, middleware
-    dates/
+    supabase/               # client serveur, client navigateur, types générés
+    dates/  domain/  validation/
 supabase/
-  migrations/
-  seed.sql
+  migrations/               # schéma + catalogue de départ
+  tests/                    # tests RLS (pgTAP)
+e2e/                        # Playwright, contre le Supabase local uniquement
 docs/
 ```
 
@@ -64,7 +67,8 @@ Créer les dossiers au fur et à mesure, pas d'avance.
 - Alias `@/*` → `src/*`. Composants en PascalCase, fonctions en camelCase.
 - Un module `server-only` n'est jamais importé par un Client Component.
 - Une server action : parse Zod → `supabase.auth.getUser()` → repository → `revalidatePath` → réponse typée `{ ok: true, data } | { ok: false, error }` avec message en français.
-- Aucune donnée privée dans un cache partagé.
+- Aucune donnée privée dans un cache partagé : `cacheComponents` est désactivé dans `next.config.ts`, toutes les pages sont rendues à la demande (voir [ADR 0001](adr/0001-choix-techniques-mvp.md)).
+- Next.js 16 : lire `node_modules/next/dist/docs/` avant d'utiliser une API ; `middleware` s'appelle désormais `proxy`.
 
 ## 3. Modèle de données
 
@@ -79,7 +83,7 @@ Valeurs de `domain` : `technique`, `scales_harmony`, `reading_rhythm`, `improvis
 | `competencies` | `id`, `slug`, `name`, `domain`, `level`, `position`, `description` |
 | `exercises` | `id`, `slug`, `title`, `domain`, `level`, `objective`, `instructions`, `estimated_minutes`, `key_signature`, `bpm_target`, `bpm_increment`, `source_type`, `source_url` |
 | `exercise_competencies` | `exercise_id`, `competency_id`, `weight` |
-| `repertoire_catalog` | `id`, `title`, `composer`, `style`, `level`, `tier`, `source_type`, `source_url`, `rights_note` |
+| `repertoire_catalog` | `id`, `slug`, `title`, `composer`, `style`, `level`, `tier`, `source_type`, `source_url`, `rights_note` |
 
 `source_type` : `original` · `public_domain` · `reference` · `user_upload`.
 
@@ -87,13 +91,13 @@ Valeurs de `domain` : `technique`, `scales_harmony`, `reading_rhythm`, `improvis
 
 | Table | Colonnes principales |
 |---|---|
-| `profiles` | `id` (= auth.users), `display_name`, `timezone`, `weekday_minutes` (25), `weekend_minutes` (60), `practice_days`, `show_streak`, `domain_preferences jsonb` |
+| `profiles` | `id` (= auth.users), `display_name`, `timezone`, `weekday_minutes` (25), `weekend_minutes` (60), `practice_days`, `show_streak`, `domain_preferences jsonb` (0 moins · 1 normal · 2 plus), `self_assessment jsonb` (niveau 1–3 par domaine), `challenge_level` (`gentle`/`balanced`/`ambitious`), `onboarded_at` |
 | `user_competencies` | `user_id`, `competency_id`, `status` (`upcoming`/`learning`/`consolidating`/`acquired`), `last_practiced_at` |
 | `user_repertoire` | `id`, `user_id`, `catalog_id?`, `title`, `composer`, `style`, `level`, `felt_difficulty`, `tier` (`comfort`/`growth`/`challenge`), `status` (`to_discover`/`active`/`paused`/`completed`), `current_step`, `notes`, `source_url`, `pdf_asset_id?` |
 | `practice_plans` | `id`, `user_id`, `week_start`, `planner_version`, `generated_at`, `settings_snapshot jsonb` |
 | `planned_tasks` | `id`, `plan_id`, `user_id`, `task_date`, `position`, `domain`, `exercise_id?`, `user_repertoire_id?`, `planned_minutes`, `target_bpm?`, `reason`, `status` (`planned`/`done`/`skipped`), `is_user_modified` |
-| `practice_sessions` | `id`, `user_id`, `session_date`, `status` (`in_progress`/`completed`), `started_at`, `ended_at`, `actual_minutes` |
-| `practice_logs` | `id`, `user_id`, `session_id`, `planned_task_id?`, `exercise_id?`, `user_repertoire_id?`, `practiced_at`, `actual_minutes`, `bpm?`, `result` (`success`/`retry`) |
+| `practice_sessions` | une par jour : `id`, `user_id`, `session_date`, `status` (`in_progress`/`completed`), `started_at`, `ended_at`, `actual_minutes` |
+| `practice_logs` | `id`, `user_id`, `session_id`, `planned_task_id?`, `domain`, `exercise_id?`, `user_repertoire_id?`, `practiced_at`, `practice_date` (date locale), `actual_minutes`, `bpm?`, `result` (`success`/`retry`) |
 | `pdf_assets` | `id`, `user_id`, `storage_path`, `original_filename`, `mime_type`, `size_bytes` |
 
 Règles :
@@ -105,7 +109,9 @@ Règles :
 
 - `features/planner/domain/buildPlan(input): PlanDraft` — fonction pure, règles dans [PRODUCT.md §6](PRODUCT.md#6-règles-du-planner).
 - `features/planner/server` — charge les données, appelle `buildPlan`, conserve les tâches `is_user_modified`, persiste.
-- `planner_version` enregistré avec chaque plan. Régénération à la demande ou à la création de la semaine : pas de cron.
+- `planner_version` enregistré avec chaque plan. Pas de cron : le plan est créé à la première visite de la semaine, puis les jours à venir sont réajustés après chaque séance terminée, changement de réglages ou de pièces en cours.
+- Jours **verrouillés**, jamais regénérés : le passé, les jours commencés, et les jours modifiés à la main (sauf confirmation explicite).
+- La cible BPM et le statut des compétences ne sont pas stockés à part : ils se déduisent des `practice_logs` (`practice/domain/bpm.ts`, `curriculum/domain/competency-status.ts`).
 
 ## 5. Sécurité
 
@@ -119,7 +125,7 @@ Règles :
 
 - Bucket privé `personal-scores`. Chemin : `<user_id>/<uuid>.pdf` (nom d'origine conservé seulement en base).
 - Policies Storage : le premier segment du chemin doit égaler `auth.uid()`.
-- Upload validé côté serveur : `application/pdf`, ≤ 20 Mo.
+- Envoi **direct du navigateur vers Storage** (les fonctions Vercel limitent la taille des requêtes), dans le dossier de l'utilisateur. Type et taille sont imposés par le bucket (`application/pdf`, ≤ 20 Mo), puis une server action revérifie l'objet avant d'enregistrer ses métadonnées.
 - Lecture par URL signée générée à la demande (courte durée), jamais stockée.
 - Suppression : objet Storage + ligne `pdf_assets`, avec compensation si l'une des deux échoue.
 
@@ -134,7 +140,9 @@ NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY=
 
 Tout autre secret : serveur/CI uniquement, jamais préfixé `NEXT_PUBLIC_`.
 
-**Local** : `pnpm dev` avec `.env.local` pointant sur le projet Supabase de dev. Supabase CLI + Docker optionnels (tests de migrations/RLS), jamais requis pour lancer le front.
+**Local** : `pnpm dev` avec `.env.local`. Supabase local (CLI + Docker) : `pnpm db:start`, puis `pnpm db:reset` pour rejouer les migrations ; requis seulement pour `pnpm test:db` (RLS) et `pnpm test:e2e`.
+
+**Commandes** : `pnpm lint` · `pnpm typecheck` · `pnpm test` (unitaires) · `pnpm test:db` (RLS) · `pnpm test:e2e` (navigateur) · `pnpm build` · `pnpm db:types` (types TypeScript depuis la base locale).
 
 **MCP Supabase** : `.mcp.json` est relié à un projet distant. Les migrations sont écrites en fichiers dans `supabase/migrations/` ; les appliquer au distant uniquement après accord de l'utilisateur.
 

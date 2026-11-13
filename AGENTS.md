@@ -57,10 +57,20 @@ En cas de conflit : demande explicite de l'utilisateur → ce fichier → le doc
 2. Annoncer un plan court et les hypothèses.
 3. Livrer la plus petite tranche verticale qui répond à la demande.
 4. Tester les règles métier et les interactions critiques.
-5. Lancer `pnpm lint`, `pnpm typecheck`, `pnpm test`, `pnpm build` — ou dire exactement ce qui n'a pas pu tourner.
+5. Lancer `pnpm lint`, `pnpm typecheck`, `pnpm test`, `pnpm build` — plus `pnpm test:db` si la base ou la RLS change et `pnpm test:e2e` si un parcours change (les deux exigent le Supabase local : `pnpm db:start`). Dire exactement ce qui n'a pas pu tourner.
 6. Vérifier l'affichage à 390 px, iPad et desktop.
 7. Vérifier : secrets, RLS, accès aux fichiers, dépendances payantes.
 8. Mettre à jour les docs et `.env.example` si le comportement ou la configuration change.
 9. Résumer : fichiers modifiés, vérifications faites, risques restants, configuration manuelle requise.
 
 Ne jamais annoncer qu'un test, une migration ou un déploiement a réussi sans l'avoir exécuté et vérifié.
+
+<!-- BEGIN:nextjs-agent-rules -->
+
+## This is NOT the Next.js you know
+
+This version has breaking changes — APIs, conventions, and file structure may all differ from your training data. Read the relevant guide in `node_modules/next/dist/docs/` (resolved from this file's directory; in monorepos the `next` package may not be visible from the repo root) before writing any code. Heed deprecation notices.
+
+This block is written and re-added by `next dev` — verify at `node_modules/next/dist/server/lib/generate-agent-files.js`. Removing it from a diff only re-creates the uncommitted change; committing it with your work keeps the tree clean.
+
+<!-- END:nextjs-agent-rules -->
