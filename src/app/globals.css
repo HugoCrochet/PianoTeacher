@@ -1,0 +1,97 @@
+@import "tailwindcss";
+
+/* Tokens repris tels quels de piano-coach-maquette.html */
+:root {
+  --bg: #ffffff;
+  --stage: #eceef1;
+  --ink: #000000;
+  --ink-2: #55585e;
+  --line: #e6e7ea;
+  --mint: #d4f0e2;
+  --lilac: #e4defa;
+  --butter: #fbefc2;
+  --peach: #fde0d3;
+  --sky: #dcebfb;
+  --btn-bg: #000000;
+  --btn-ink: #ffffff;
+  --danger: #a4161a;
+  color-scheme: light;
+}
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg: #17181b;
+    --stage: #0d0e10;
+    --ink: #f5f5f4;
+    --ink-2: #a6a8ad;
+    --line: #2a2c30;
+    --mint: #1f3b2f;
+    --lilac: #2f2a47;
+    --butter: #3f3820;
+    --peach: #43291f;
+    --sky: #1f3045;
+    --btn-bg: #f5f5f4;
+    --btn-ink: #17181b;
+    --danger: #ffb4ab;
+    color-scheme: dark;
+  }
+}
+
+@theme inline {
+  --color-bg: var(--bg);
+  --color-stage: var(--stage);
+  --color-ink: var(--ink);
+  --color-ink-2: var(--ink-2);
+  --color-line: var(--line);
+  --color-mint: var(--mint);
+  --color-lilac: var(--lilac);
+  --color-butter: var(--butter);
+  --color-peach: var(--peach);
+  --color-sky: var(--sky);
+  --color-btn-bg: var(--btn-bg);
+  --color-btn-ink: var(--btn-ink);
+  --color-danger: var(--danger);
+  /* Alias sémantiques shadcn → tokens de la maquette */
+  --color-background: var(--bg);
+  --color-foreground: var(--ink);
+  --color-primary: var(--btn-bg);
+  --color-primary-foreground: var(--btn-ink);
+  --color-muted-foreground: var(--ink-2);
+  --color-border: var(--line);
+  --color-input: var(--line);
+  --color-ring: var(--ink);
+  --color-destructive: var(--danger);
+  --font-sans: var(--font-bricolage), "Avenir Next", "Segoe UI", system-ui, sans-serif;
+}
+
+html,
+body {
+  height: 100%;
+}
+body {
+  background: var(--bg);
+  color: var(--ink);
+  font-family: var(--font-sans);
+  -webkit-font-smoothing: antialiased;
+}
+
+/* Focus visible identique à la maquette */
+:where(a, button, input, select, textarea, summary, [tabindex]):focus-visible {
+  outline: 3px solid var(--ink);
+  outline-offset: 3px;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .screen-in {
+    animation: screen-in 0.22s ease-out;
+  }
+  @keyframes screen-in {
+    from {
+      opacity: 0;
+      transform: translateY(6px);
+    }
+    to {
+      opacity: 1;
+      transform: none;
+    }
+  }
+}
