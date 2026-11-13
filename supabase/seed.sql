@@ -1,0 +1,1 @@
+-- Le contenu du catalogue est dans les migrations (appliqué aussi en production). Rien à ajouter en local.
