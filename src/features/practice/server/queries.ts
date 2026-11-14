@@ -1,6 +1,7 @@
 import "server-only";
 import type { IsoDate } from "@/lib/dates";
 import type { Domain } from "@/lib/domain/domains";
+import { effectiveKey } from "@/lib/domain/keys";
 import type { ServerClient } from "@/lib/supabase/server";
 import { improvisationPrompt, type ImprovisationPrompt } from "../domain/improvisation";
 
@@ -115,19 +116,32 @@ export interface LogView {
   result: "success" | "retry";
   exerciseId: string | null;
   pieceId: string | null;
+  passageId: string | null;
+  /** Tonalité travaillée en gammes et harmonie, sinon null. */
+  key: string | null;
 }
 
-/** Résultats réellement enregistrés depuis `from` (ordre chronologique). */
-export async function getLogs(supabase: ServerClient, from: IsoDate): Promise<LogView[]> {
-  const { data, error } = await supabase
-    .from("practice_logs")
-    .select(
-      "id, practice_date, practiced_at, domain, actual_minutes, bpm, result, exercise_id, user_repertoire_id, exercise:exercises ( title ), piece:user_repertoire ( title )",
-    )
-    .gte("practice_date", from)
-    .order("practiced_at", { ascending: true });
-  if (error) throw new Error(`Chargement de l'historique impossible : ${error.message}`);
-  return data.map((l) => ({
+const LOG_COLUMNS =
+  "id, practice_date, practiced_at, domain, actual_minutes, bpm, result, exercise_id, user_repertoire_id, passage_id, key_signature, exercise:exercises ( title, key_signature ), piece:user_repertoire ( title )";
+const PAGE_SIZE = 1000;
+
+/** Résultats réellement enregistrés depuis `from` (ordre chronologique par date de pratique), lus par pages de 1000. */
+export async function getLogs(supabase: ServerClient, from: IsoDate = "1970-01-01"): Promise<LogView[]> {
+  const rows = [];
+  for (let offset = 0; ; offset += PAGE_SIZE) {
+    const { data, error } = await supabase
+      .from("practice_logs")
+      .select(LOG_COLUMNS)
+      .gte("practice_date", from)
+      .order("practice_date", { ascending: true })
+      .order("practiced_at", { ascending: true })
+      .order("id", { ascending: true })
+      .range(offset, offset + PAGE_SIZE - 1);
+    if (error) throw new Error(`Chargement de l'historique impossible : ${error.message}`);
+    rows.push(...data);
+    if (data.length < PAGE_SIZE) break;
+  }
+  return rows.map((l) => ({
     id: l.id,
     date: l.practice_date,
     practicedAt: l.practiced_at,
@@ -138,5 +152,7 @@ export async function getLogs(supabase: ServerClient, from: IsoDate): Promise<Lo
     result: l.result as LogView["result"],
     exerciseId: l.exercise_id,
     pieceId: l.user_repertoire_id,
+    passageId: l.passage_id,
+    key: effectiveKey(l.domain, l.key_signature, l.exercise?.key_signature ?? null),
   }));
 }
