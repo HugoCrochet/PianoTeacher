@@ -33,7 +33,7 @@ export default async function SettingsPage() {
         icon={Settings}
         tint="sky"
         title="Paramètres"
-        subtitle={profile.onboardedAt ? user.email : "Bienvenue ! Vérifie ces réglages pour démarrer."}
+        subtitle={profile.onboardedAt ? (user.email ?? undefined) : "Bienvenue ! Vérifie ces réglages pour démarrer."}
       />
 
       <ActionForm action={updateProfile} className="max-w-[760px]">

@@ -1,9 +1,8 @@
 import "server-only";
 import { cache } from "react";
-import type { User } from "@supabase/supabase-js";
 import { todayInTimeZone, type IsoDate } from "@/lib/dates";
 import { EXERCISE_DOMAINS, type ExerciseDomain } from "@/lib/domain/domains";
-import { requireUser, type ServerClient } from "@/lib/supabase/server";
+import { requireUser, type ServerClient, type SessionUser } from "@/lib/supabase/server";
 import type { ChallengeLevel, PlannerSettings } from "@/features/planner/domain/build-plan";
 
 export interface Profile {
@@ -40,7 +39,7 @@ function numberRecord(value: unknown, fallback: (d: ExerciseDomain) => number, m
 
 export interface AppContext {
   supabase: ServerClient;
-  user: User;
+  user: SessionUser;
   profile: Profile;
   today: IsoDate;
 }

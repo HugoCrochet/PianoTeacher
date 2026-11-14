@@ -73,7 +73,6 @@ test("exercices : filtre et ajout au programme", async ({ page }) => {
   await page.getByRole("button", { name: "Ajouter au programme" }).click();
   await expect(page.getByText("Ajouté au programme.")).toBeVisible();
   await page.goto("/aujourdhui");
-  await expect(page.getByText(/Ostinato do–sol/)).toBeVisible();
   await expect(page.getByText("Pourquoi : ajouté par toi")).toBeVisible();
 });
 

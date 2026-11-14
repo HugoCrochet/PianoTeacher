@@ -1,6 +1,5 @@
 import "server-only";
 import { createServerClient } from "@supabase/ssr";
-import type { User } from "@supabase/supabase-js";
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 import { cache } from "react";
@@ -25,19 +24,27 @@ export async function createClient() {
 
 export type ServerClient = Awaited<ReturnType<typeof createClient>>;
 
+/** Identité extraite d'un jeton dont la signature a été vérifiée. */
+export interface SessionUser {
+  id: string;
+  email: string | null;
+}
+
 /**
- * Utilisateur vérifié auprès de Supabase Auth (jamais un user_id venu du navigateur).
- * Dédupliqué par requête.
+ * Utilisateur authentifié (jamais un user_id venu du navigateur).
+ * `getClaims` vérifie la signature du jeton avec la clé publique du projet (ES256),
+ * sans appel au serveur d'authentification ; il ne retombe sur un appel réseau
+ * que si le projet utilisait encore une clé symétrique. Dédupliqué par requête.
  */
-export const getSessionUser = cache(async (): Promise<{ supabase: ServerClient; user: User | null }> => {
+export const getSessionUser = cache(async (): Promise<{ supabase: ServerClient; user: SessionUser | null }> => {
   const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  const { data, error } = await supabase.auth.getClaims();
+  const claims = error ? null : data?.claims;
+  const user = claims?.sub ? { id: claims.sub, email: typeof claims.email === "string" ? claims.email : null } : null;
   return { supabase, user };
 });
 
-export async function requireUser(): Promise<{ supabase: ServerClient; user: User }> {
+export async function requireUser(): Promise<{ supabase: ServerClient; user: SessionUser }> {
   const { supabase, user } = await getSessionUser();
   if (!user) redirect("/connexion");
   return { supabase, user };

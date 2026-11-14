@@ -116,8 +116,8 @@ Règles :
 ## 5. Sécurité
 
 - Inscription publique désactivée ; un seul compte créé à la main. Connexion email/mot de passe (pas de SMTP tiers requis).
-- Sessions en cookies via `@supabase/ssr` ; middleware qui rafraîchit la session et protège `(protected)`.
-- Vérifier l'utilisateur côté serveur pour chaque lecture/mutation privée ; `user_id` toujours dérivé de la session.
+- Sessions en cookies via `@supabase/ssr` ; `proxy.ts` rafraîchit la session et protège `(protected)`.
+- Vérifier l'utilisateur côté serveur pour chaque lecture/mutation privée avec `supabase.auth.getClaims()` : la signature du jeton est vérifiée localement avec la clé publique du projet (ES256), sans appel réseau. `user_id` toujours dérivé de ces claims. Ne jamais utiliser `getSession()` pour autoriser.
 - RLS activée sur toutes les tables. Personnel : `auth.uid() = user_id` pour SELECT/INSERT/UPDATE/DELETE. Catalogue : SELECT seul.
 - `service_role` : jamais dans le navigateur ni dans les routes utilisateur ; uniquement scripts d'admin locaux/CI si nécessaire.
 
@@ -146,7 +146,7 @@ Tout autre secret : serveur/CI uniquement, jamais préfixé `NEXT_PUBLIC_`.
 
 **MCP Supabase** : `.mcp.json` est relié à un projet distant. Les migrations sont écrites en fichiers dans `supabase/migrations/` ; les appliquer au distant uniquement après accord de l'utilisateur.
 
-**Production** : branche `main` → Vercel Hobby, variables dans Vercel, domaine `.vercel.app`. Projet Supabase de prod séparé si le quota gratuit le permet, sinon le documenter.
+**Production** : branche `main` → Vercel Hobby, variables dans Vercel, domaine `.vercel.app`. Les fonctions tournent à Dublin (`dub1`, fixé dans `vercel.json`), à côté de la base Supabase (eu-west-1, Irlande) : chaque requête à la base coûte 1–2 ms au lieu d'une traversée de l'Atlantique. Si le projet Supabase change de région, changer aussi `regions`. Projet Supabase de prod séparé si le quota gratuit le permet, sinon le documenter.
 
 **Limites du gratuit** : Vercel Hobby = usage personnel ; Supabase Free met en pause les projets inactifs et n'inclut pas de sauvegarde. Donc : export régulier (dump SQL + PDF), restauration testée, réactivation manuelle si pause. Ne pas générer de trafic artificiel. Aucune facturation activée sans accord explicite.
 

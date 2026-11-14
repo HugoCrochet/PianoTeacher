@@ -23,7 +23,8 @@ test("connexion → séance → résultat + BPM → historique, puis déconnexio
   await login(page);
 
   await page.getByRole("link", { name: /Aujourd’hui/ }).click();
-  await expect(page.getByText("25 minutes, dans cet ordre.")).toBeVisible();
+  const weekend = [0, 6].includes(new Date().getDay());
+  await expect(page.getByText(`${weekend ? 60 : 25} minutes, dans cet ordre.`)).toBeVisible();
   await expect(page.getByText(/Pourquoi :/).first()).toBeVisible();
   const taskCount = await page.getByRole("listitem").count();
   expect(taskCount).toBeGreaterThanOrEqual(3);
@@ -41,10 +42,12 @@ test("connexion → séance → résultat + BPM → historique, puis déconnexio
   await expect(page.getByRole("button", { name: /À retravailler/ })).toHaveAttribute("aria-pressed", "false");
   const bpm = page.getByLabel(/BPM atteint/);
   if (await bpm.count()) await bpm.fill("72");
+  await page.getByLabel("Durée réelle (min)").fill("5");
   await validate.click();
   await expect(page.getByText(`tâche 2 sur ${taskCount}`)).toBeVisible();
 
   await choose(page, "À retravailler");
+  await page.getByLabel("Durée réelle (min)").fill("5");
   await validate.click();
   await expect(page.getByText(`tâche 3 sur ${taskCount}`)).toBeVisible();
 
@@ -65,7 +68,7 @@ test("connexion → séance → résultat + BPM → historique, puis déconnexio
   await expect(page.getByRole("listitem").filter({ hasText: title }).filter({ hasText: "Réussi" })).toBeVisible();
   await expect(page.getByText(/1 tâche à retravailler/)).toBeVisible();
 
-  // Les statistiques ne comptent que le réalisé (2 tâches de 5 min), pas le planifié (25 min).
+  // Les statistiques ne comptent que le réalisé (2 × 5 min saisies), pas le planifié.
   await expect(page.getByText("10 min cette semaine.")).toBeVisible();
 
   await page.goto("/parametres");

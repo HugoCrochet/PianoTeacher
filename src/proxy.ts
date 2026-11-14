@@ -17,9 +17,9 @@ export async function proxy(request: NextRequest) {
     },
   });
 
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  // Rafraîchit le jeton si besoin, puis vérifie sa signature localement (clé publique ES256).
+  const { data } = await supabase.auth.getClaims();
+  const user = data?.claims?.sub ?? null;
 
   const isLogin = request.nextUrl.pathname.startsWith("/connexion");
   if (!user && !isLogin) {
