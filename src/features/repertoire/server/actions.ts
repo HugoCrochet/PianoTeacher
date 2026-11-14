@@ -7,13 +7,17 @@ import { weekStartOf } from "@/lib/dates";
 import {
   firstError,
   idSchema,
+  MAX_PASSAGES,
+  passageSchema,
   PDF_MAX_BYTES,
   pdfRegisterSchema,
   pieceSchema,
   pieceUpdateSchema,
+  splitPassagesSchema,
 } from "@/lib/validation/schemas";
 import { regenerateWeek } from "@/features/planner/server/plan-service";
 import { getContext, type AppContext } from "@/features/profile/server/profile";
+import { splitMeasures } from "../domain/passages";
 import { removeScore, scorePath, SCORES_BUCKET } from "./pdf";
 
 /** Les pièces en cours ont changé : on réajuste les jours à venir, sans toucher au manuel. */
@@ -190,4 +194,73 @@ export async function deletePdf(_prev: ActionState, formData: FormData): Promise
   }
   revalidatePath("/", "layout");
   return done("Partition supprimée.");
+}
+
+/* ---------------------------------------------------------------------------
+ * Passages
+ * ------------------------------------------------------------------------- */
+
+/** Nombre et dernière position des passages d'un morceau ; null si le morceau n'est pas à l'utilisateur. */
+async function passageSlots(ctx: AppContext, pieceId: string): Promise<{ count: number; last: number } | null> {
+  const piece = await ctx.supabase.from("user_repertoire").select("id").eq("id", pieceId).maybeSingle();
+  if (!piece.data) return null;
+  const rows = await ctx.supabase.from("piece_passages").select("position").eq("user_repertoire_id", pieceId);
+  const positions = (rows.data ?? []).map((r) => r.position);
+  return { count: positions.length, last: positions.length > 0 ? Math.max(...positions) : 0 };
+}
+
+export async function addPassage(_prev: ActionState, formData: FormData): Promise<ActionState> {
+  const parsed = passageSchema.safeParse(Object.fromEntries(formData));
+  if (!parsed.success) return fail(firstError(parsed.error));
+  const ctx = await getContext();
+  const slots = await passageSlots(ctx, parsed.data.pieceId);
+  if (!slots) return fail("Ce morceau n'existe plus.");
+  if (slots.count >= MAX_PASSAGES) return fail(`${MAX_PASSAGES} passages au plus par morceau.`);
+  const { error } = await ctx.supabase.from("piece_passages").insert({
+    user_id: ctx.user.id,
+    user_repertoire_id: parsed.data.pieceId,
+    position: slots.last + 1,
+    label: parsed.data.label,
+    target_bpm: parsed.data.targetBpm ?? null,
+  });
+  if (error) return fail("Le passage n'a pas pu être ajouté. Réessaie.");
+  await replan(ctx);
+  revalidatePath("/", "layout");
+  return done("Passage ajouté.");
+}
+
+export async function splitPassages(_prev: ActionState, formData: FormData): Promise<ActionState> {
+  const parsed = splitPassagesSchema.safeParse(Object.fromEntries(formData));
+  if (!parsed.success) return fail(firstError(parsed.error));
+  const ctx = await getContext();
+  const { pieceId, totalMeasures, size } = parsed.data;
+  const slots = await passageSlots(ctx, pieceId);
+  if (!slots) return fail("Ce morceau n'existe plus.");
+  const labels = splitMeasures(totalMeasures, size);
+  if (slots.count + labels.length > MAX_PASSAGES) {
+    return fail(`Cela ferait plus de ${MAX_PASSAGES} passages : choisis des passages plus longs.`);
+  }
+  const { error } = await ctx.supabase.from("piece_passages").insert(
+    labels.map((label, i) => ({
+      user_id: ctx.user.id,
+      user_repertoire_id: pieceId,
+      position: slots.last + i + 1,
+      label,
+    })),
+  );
+  if (error) return fail("Le découpage n'a pas pu être enregistré. Réessaie.");
+  await replan(ctx);
+  revalidatePath("/", "layout");
+  return done(`${labels.length} ${labels.length > 1 ? "passages ajoutés" : "passage ajouté"}.`);
+}
+
+export async function deletePassage(formData: FormData): Promise<void> {
+  const parsed = idSchema.safeParse(Object.fromEntries(formData));
+  if (!parsed.success) return;
+  const ctx = await getContext();
+  // La RLS limite la suppression aux passages de l'utilisateur ; l'historique garde ses résultats.
+  const { error } = await ctx.supabase.from("piece_passages").delete().eq("id", parsed.data.id);
+  if (error) return;
+  await replan(ctx);
+  revalidatePath("/", "layout");
 }

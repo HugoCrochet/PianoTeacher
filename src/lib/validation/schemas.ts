@@ -50,6 +50,18 @@ export const pieceSchema = z.object(pieceFields);
 export const pieceUpdateSchema = z.object({ id: z.uuid(), ...pieceFields });
 export const idSchema = z.object({ id: z.uuid() });
 
+export const MAX_PASSAGES = 50;
+export const passageSchema = z.object({
+  pieceId: z.uuid(),
+  label: text(80).min(1, "Donne un nom au passage (ex. « Mesures 9–16 »)."),
+  targetBpm: optionalInt(20, 300),
+});
+export const splitPassagesSchema = z.object({
+  pieceId: z.uuid(),
+  totalMeasures: z.coerce.number("Indique le nombre de mesures.").int().min(1, "Au moins 1 mesure.").max(500, "500 mesures au plus."),
+  size: z.coerce.number("Indique la taille des passages.").int().min(1, "Au moins 1 mesure par passage.").max(64, "64 mesures au plus par passage."),
+});
+
 export const PDF_MAX_BYTES = 20 * 1024 * 1024;
 export const pdfRegisterSchema = z.object({
   pieceId: z.uuid(),
