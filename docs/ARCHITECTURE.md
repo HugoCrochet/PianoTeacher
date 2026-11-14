@@ -84,7 +84,7 @@ Valeurs de `domain` : `technique`, `scales_harmony`, `reading_rhythm`, `improvis
 | `competencies` | `id`, `slug`, `name`, `domain`, `level`, `position`, `description`, `objective` |
 | `exercises` | `id`, `slug`, `title`, `domain`, `level`, `objective`, `instructions`, `estimated_minutes`, `key_signature`, `key_mode` (`major`/`minor` = transposable par le planner), `bpm_target`, `bpm_increment`, `source_type`, `source_url` |
 | `exercise_competencies` | `exercise_id`, `competency_id`, `weight` |
-| `repertoire_catalog` | `id`, `slug`, `title`, `composer`, `style`, `level`, `tier`, `source_type`, `source_url`, `rights_note` |
+| `repertoire_catalog` | `id`, `slug`, `title`, `composer`, `style`, `period?`, `level`, `tier`, `source_type`, `source_url`, `rights_note` |
 
 `source_type` : `original` · `public_domain` · `reference` · `user_upload`.
 
@@ -94,7 +94,7 @@ Valeurs de `domain` : `technique`, `scales_harmony`, `reading_rhythm`, `improvis
 |---|---|
 | `profiles` | `id` (= auth.users), `display_name`, `timezone`, `weekday_minutes` (25), `weekend_minutes` (60), `practice_days`, `show_streak`, `domain_preferences jsonb` (0 moins · 1 normal · 2 plus), `self_assessment jsonb` (niveau 1–3 par domaine), `challenge_level` (`gentle`/`balanced`/`ambitious`), `onboarded_at` |
 | `user_competencies` | `user_id`, `competency_id`, `status` (`upcoming`/`learning`/`consolidating`/`acquired`), `last_practiced_at` |
-| `user_repertoire` | `id`, `user_id`, `catalog_id?`, `title`, `composer`, `style`, `level`, `felt_difficulty`, `tier` (`comfort`/`growth`/`challenge`), `status` (`to_discover`/`active`/`paused`/`completed`), `current_step`, `notes`, `source_url`, `pdf_asset_id?` |
+| `user_repertoire` | `id`, `user_id`, `catalog_id?`, `title`, `composer`, `style`, `period?` (courant, époques Open Opus), `level`, `felt_difficulty` et `tier` (hérités, plus saisis : défaut `growth`), `status` (`to_discover`/`active`/`paused`/`completed`), `current_step`, `notes`, `source_url`, `pdf_asset_id?` |
 | `piece_passages` | `id`, `user_id`, `user_repertoire_id`, `position`, `label`, `target_bpm?` |
 | `practice_plans` | `id`, `user_id`, `week_start`, `planner_version`, `generated_at`, `settings_snapshot jsonb` |
 | `planned_tasks` | `id`, `plan_id`, `user_id`, `task_date`, `position`, `domain`, `exercise_id?`, `user_repertoire_id?`, `planned_minutes`, `target_bpm?`, `key_signature?`, `passage_id?`, `reason`, `status` (`planned`/`done`/`skipped`), `is_user_modified` |
@@ -142,6 +142,8 @@ NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY=
 ```
 
 Tout autre secret : serveur/CI uniquement, jamais préfixé `NEXT_PUBLIC_`.
+
+**Services externes** : seulement Open Opus (recherche d'œuvres, facultatif, côté serveur, cache 24 h, timeout 5 s — [ADR 0002](adr/0002-recherche-oeuvres-open-opus.md)). `OPEN_OPUS_BASE_URL` (facultatif) le remplace en test.
 
 **Local** : `pnpm dev` avec `.env.local`. Supabase local (CLI + Docker) : `pnpm db:start`, puis `pnpm db:reset` pour rejouer les migrations ; requis seulement pour `pnpm test:db` (RLS) et `pnpm test:e2e`.
 

@@ -59,11 +59,12 @@ Catalogue filtrable par domaine, niveau, tonalité et durée. Fiche : titre, dom
 
 ### Répertoire
 - Suggestions curées + ajout libre de pièces personnelles.
-- Niveau d'usage : `Confort`, `Progression`, `Challenge`.
+- **Recherche d'œuvres** dans « Ajouter un morceau » (Open Opus, répertoire classique pour clavier — voir [ADR 0002](adr/0002-recherche-oeuvres-open-opus.md)) : recherche par compositeur ou titre, en français ou en anglais ; liste des œuvres pour piano d'un compositeur ; œuvres populaires d'abord. « Choisir » pré-remplit titre (traduit en français pour les formes courantes), compositeur, courant et lien de recherche IMSLP ; tout reste modifiable. Si le service ne répond pas, la saisie manuelle reste possible.
 - Statut : `À découvrir`, `En cours`, `En pause`, `Terminé`.
-- Champs : titre, compositeur, style, difficulté estimée et ressentie, étape en cours (ex. « mesures 9 à 16 »), notes, lien, PDF.
-- **Passages** : un morceau peut être découpé en passages (ajout un par un, ou « découper par mesures » : 20 mesures par 8 → 1–8, 9–16, 17–20), chacun avec un tempo visé optionnel. Statut d'après les résultats : `Pas encore travaillé`, `En travail`, `Solide` (au moins 3 réussites dont les 2 dernières). Affichage : dernier BPM « 54 sur 60 visés ». Supprimer un passage garde l'historique.
-- Viser 1–2 pièces en cours + éventuellement 1 challenge (indicatif, pas une limite).
+- Champs : titre, compositeur, style, **courant** (Baroque, Classique, Romantique…), difficulté estimée, étape en cours (ex. « mesures 9 à 16 »), notes, lien, PDF.
+- Filtre par courant dans la liste des morceaux (dès que deux courants sont présents).
+- Après l'ajout, la fiche s'ouvre sur la section Partition : bouton « Trouver la partition sur IMSLP » (l'utilisateur choisit une édition libre de droits), puis import du PDF. Aucune partition n'est téléchargée automatiquement.
+- Viser 1–2 pièces en cours (indicatif, pas une limite).
 - Priorité de style : classique, puis musiques de film, puis le reste.
 
 ### Partitions PDF
