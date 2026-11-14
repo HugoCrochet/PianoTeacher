@@ -1,111 +1,48 @@
 # Roadmap — Piano Coach
 
-Livraison par tranches verticales. Les fonctionnalités sont décrites dans [PRODUCT.md](PRODUCT.md) ; ce fichier ne dit que **l'ordre** et **quand c'est fini**.
+Livraison par tranches verticales. Les fonctionnalités sont décrites dans [PRODUCT.md](PRODUCT.md) ; ce fichier ne dit que **l'ordre**, **ce qui est livré** et **quand c'est fini**.
 
-## Étape 1 — POC
+Production : https://piano-coach-olive.vercel.app (Vercel `dub1` + Supabase eu-west-1).
 
-**Question à prouver** : je me connecte, j'ouvre une séance, je saisis un résultat et un BPM, et je retrouve la donnée sur l'autre appareil — avec Vercel + Supabase, sans serveur à gérer.
+## Livré
 
-**Contenu**
-1. Next.js + TypeScript + Tailwind + shadcn/ui initialisés, CI GitHub Actions.
-2. Supabase : auth email/mot de passe, inscription désactivée, compte unique créé à la main.
-3. Shell responsive avec l'accueil et la navigation de la maquette.
-4. Seed minimal : 4 exercices (un par domaine hors répertoire) + 1 morceau du domaine public.
-5. Une séance de démonstration fixe (pas encore de planner).
-6. Démarrer la séance, saisir `réussi`/`à retravailler` + BPM, terminer.
-7. Historique des logs.
-8. Déploiement Vercel.
+| Étape | Contenu | Livré le |
+|---|---|---|
+| 1 — POC | Auth email/mot de passe (inscription fermée), séance, résultat + BPM, historique, CI, déploiement | 13 nov. 2026 |
+| 2 — MVP | Modèle complet + seed, exercices, répertoire + PDF privés, paramètres, planner + programme éditable, parcours, progression, export JSON/CSV, E2E et revue sécurité | 13 nov. 2026 |
+| 3A — Au piano (partiel) | Métronome, minuteur par tâche, écran allumé (Wake Lock), mode pupitre | 14 nov. 2026 |
+| 3B — Pédagogie visible | Cercle des 24 tonalités + tonalité du jour, passages de morceaux + passage le plus fragile, variante d'improvisation du jour, fiches de compétence | 14 nov. 2026 |
+| 3C — Voir ses progrès | Bilan de la semaine, calendrier 12 semaines, temps par domaine sur 4 semaines, records et jalons | 14 nov. 2026 |
 
-**Fini quand**
-- [x] Connexion et déconnexion fonctionnent ; une page privée sans session redirige vers `/connexion`.
-- [x] Le résultat et le BPM sont validés côté serveur et persistent après rechargement.
-- [ ] Le résultat apparaît sur un second appareil connecté au même compte.
-- [x] Un test prouve qu'un autre utilisateur ne lit pas ces données (RLS).
-- [x] Aucun secret dans le bundle client.
-- [x] Parcours utilisable à 390 px, sur iPad et sur desktop.
-- [ ] Démontré en conditions réelles (la maquette seule ne compte pas).
+Tous les critères automatisables de ces étapes sont couverts par les tests (unitaires, RLS, navigateur) et la CI passe sur `main`.
 
-## Étape 2 — MVP
+## Vérifications manuelles restantes
 
-Ordre d'implémentation :
+À faire par l'utilisateur, en conditions réelles :
 
-1. **Modèle de données complet + seed** (compétences, exercices, répertoire suggéré).
-2. **Exercices** : catalogue filtrable, fiches.
-3. **Répertoire + PDF privés**.
-4. **Profil et paramètres** : auto-évaluation, disponibilités, préférences.
-5. **Planner** et programme de la semaine, édition manuelle.
-6. **Parcours pédagogique**.
-7. **Progression** et statistiques.
-8. **Export** JSON/CSV + procédure de sauvegarde/restauration documentée.
-9. **Durcissement** : E2E Playwright, revue sécurité.
+- [ ] Un résultat saisi sur l'iPad apparaît sur le Mac (même compte).
+- [ ] Parcours complet sur Safari iPad (portrait et paysage) et sur un navigateur Mac récent.
+- [ ] Au piano : métronome audible (y compris iPad en mode silencieux), écran qui reste allumé, mode pupitre lisible à 1 m.
+
+## À faire
+
+### Fin de la phase A — Au piano
+1. **Installable sur l'écran d'accueil** (PWA : manifeste, icône, plein écran ; pas de mode hors ligne).
+2. **Partition depuis la séance** : bouton « Ouvrir la partition » sur une tâche de répertoire qui a un PDF.
+3. **Réactivité** : retour immédiat au clic sur les résultats, requêtes regroupées sur les pages les plus lentes.
 
 **Fini quand**
-- [x] Toutes les données personnelles sont en PostgreSQL, protégées par RLS (tables et Storage).
-- [x] Le plan du jour respecte la durée configurée.
-- [x] Le plan de la semaine couvre les 5 domaines.
-- [x] Une tâche `à retravailler` revient plus tard, sans dette ; une tâche manquée n'est pas reportée.
-- [x] La cible BPM n'augmente qu'après 3 réussites consécutives, et la raison est affichée.
-- [x] Les modifications manuelles du programme survivent à une régénération (ou sont remplacées après confirmation).
-- [x] Les PDF s'importent, se consultent et se suppriment de façon privée.
-- [x] Les statistiques ne reflètent que les logs réels.
-- [x] Les données essentielles s'exportent.
-- [ ] Fonctionne sur Safari iPad et un navigateur Mac récent.
-- [ ] Lint, typecheck, tests et build passent en CI.
-
-> État au 13 novembre 2026 : cases cochées = vérifié par les tests automatiques (unitaires, RLS, navigateur) sur Supabase local, et déploiement en ligne sur https://piano-coach-olive.vercel.app. Restent à faire par l'utilisateur : essai sur un vrai iPad et un second appareil ; la CI tournera au premier push sur GitHub.
-
-## Étape 3 — Au-delà du MVP
-
-Le comportement attendu de chaque fonctionnalité livrée est décrit dans [PRODUCT.md](PRODUCT.md). Ordre recommandé : phase A, puis B2 (passages), puis le reste.
-
-### Phase A — Au piano
-1. **Métronome** dans la séance, calé sur le BPM cible de la tâche, réglable −/+.
-2. **Minuteur par tâche** : compte à rebours sur la durée prévue, signal doux à la fin, durée réelle pré-remplie.
-3. **Écran toujours allumé** pendant la séance (Wake Lock).
-4. **Installable sur l'écran d'accueil** (PWA : icône, plein écran ; pas de mode hors ligne).
-5. **Mode pupitre** : texte et boutons agrandis, lisibles à 1 m.
-6. **Partition depuis la séance** : bouton « Ouvrir la partition » sur une tâche de répertoire.
-7. **Réactivité** : retour immédiat au clic, requêtes regroupées.
-
-**Fini quand**
-- [x] Le métronome démarre au BPM cible, se règle pendant qu'il joue et s'arrête quand on change de tâche.
-- [x] Le minuteur se lance, se met en pause, signale la fin du temps prévu sans bloquer, et pré-remplit la durée réelle (toujours modifiable).
-- [x] L'écran ne se met pas en veille pendant une séance (navigateurs compatibles) ; sans support, rien ne casse.
-- [x] Le mode pupitre s'active d'un bouton, est mémorisé sur l'appareil et reste utilisable à 390 px.
-- [ ] Testé sur le vrai iPad, piano à côté (son du métronome audible, écran allumé).
-- [ ] A4, A6, A7 livrés.
-
-### Phase B — Pédagogie visible
-1. **Les 12 tonalités** : cercle des quintes des gammes/arpèges travaillés ; le planner favorise les tonalités jamais jouées.
-2. **Pièces découpées en passages** (mesures 1–8, 9–16…) avec statut et BPM ; le planner cible le passage le plus fragile.
-3. **Consignes d'improvisation variées**, tirées de façon déterministe selon la date.
-4. **Fiches de compétence** : objectif concret, exercices liés, ce qui manque pour « Acquise ».
-
-**Fini quand**
-- [x] Le parcours affiche le cercle des 24 tonalités (jamais jouée / travaillée / bien installée), calculé sur les seuls résultats réels, avec un équivalent texte.
-- [x] Les exercices transposables reçoivent la tonalité du jour, d'abord celles jamais jouées et dans la limite du niveau, avec la raison affichée.
-- [x] Un morceau se découpe en passages (un par un ou par mesures) ; le statut et le BPM de chaque passage viennent des résultats.
-- [x] Le planner cible le passage le plus fragile et le résultat de la séance est rattaché à ce passage.
-- [x] Chaque tâche d'improvisation affiche une variante du jour déterministe (tonalité, grille, rythme, objectif).
-- [x] Chaque compétence a une fiche : objectif concret, ce qui manque pour « Acquise », exercices liés.
-- [x] RLS de la table des passages testée (propriétaire, autre utilisateur).
-- [x] Migration appliquée au Supabase de production (14 novembre 2026).
-
-### Phase C — Voir ses progrès
-1. Calendrier de pratique, temps par domaine sur 4 semaines, courbes BPM (SVG rendu serveur, sans dépendance).
-2. Bilan de la semaine, au ton encourageant.
-3. Records et jalons (première pièce jouée en entier, tonalité couverte…).
-
-**Fini quand**
-- [x] Calendrier de 12 semaines et temps par domaine sur 4 semaines, avec équivalent texte, calculés sur les seuls résultats réels.
-- [x] Bilan de la semaine dernière, encourageant même après une semaine sans pratique.
-- [x] Records et jalons datés au jour où ils sont franchis, avec les prochains jalons.
-- [x] Lisible à 390 px, sur iPad et sur desktop.
+- [ ] L'app s'ajoute à l'écran d'accueil de l'iPad et s'ouvre en plein écran, avec son icône.
+- [ ] Une tâche de répertoire avec partition l'ouvre en un geste, sans quitter la séance.
+- [ ] Valider un résultat donne un retour visuel immédiat ; aucune page privée ne dépasse ~1 s en production (mesuré).
 
 ### Phase D — Fiabilité à coût nul
 1. Sauvegarde hebdomadaire automatique (GitHub Actions : dump SQL + PDF vers un dépôt privé).
 2. Restauration testée et documentée.
-3. Clôturer l'étape 1 : iPad réel + second appareil.
+
+**Fini quand**
+- [ ] Une sauvegarde datée est produite chaque semaine sans action manuelle, sans secret dans le dépôt.
+- [ ] Une restauration complète sur un Supabase local a été faite et la procédure est écrite.
 
 ### À trancher par ADR (contraire au hors-périmètre de PRODUCT §8)
 - Flashcards de lecture en clé de fa (exige un rendu de notes sur portée).
@@ -115,8 +52,8 @@ Le comportement attendu de chaque fonctionnalité livrée est décrit dans [PROD
 
 | Type | Outil | Couvre |
 |---|---|---|
-| Unitaires | Vitest | Toutes les règles du planner (§6 de PRODUCT.md), progression BPM, statuts de compétences |
-| RLS | SQL / Supabase local | Utilisateur propriétaire, anonyme, autre utilisateur — tables et Storage |
+| Unitaires | Vitest | Règles du planner (PRODUCT §6), BPM, statuts de compétences et de passages, tonalités, variante d'improvisation, bilan, jalons, outils de séance |
+| RLS | pgTAP / Supabase local | Propriétaire, autre utilisateur, anonyme — tables (dont passages) et Storage |
 | PDF | Vitest + manuel | Type MIME, taille, chemin, accès non autorisé, URL signée expirée |
-| E2E | Playwright (à partir du MVP) | Connexion → séance → résultat + BPM → historique |
-| Visuel | Manuel | 390 px, iPad portrait/paysage, desktop |
+| E2E | Playwright, Supabase local | Connexion → séance (minuteur, métronome, pupitre) → résultat + BPM → progression ; répertoire, PDF, passages ; programme ; parcours et fiches ; responsive |
+| Visuel | Manuel + captures Playwright | 390 px, iPad portrait/paysage, desktop |
