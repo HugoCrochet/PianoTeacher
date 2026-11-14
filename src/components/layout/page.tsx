@@ -105,18 +105,24 @@ export function Row({
           {main}
           {detail ? <small className="mt-0.5 block text-[15px] text-ink-2">{detail}</small> : null}
         </span>
-        {meta ? <span className="text-right text-base text-ink-2">{meta}</span> : null}
+        {meta ? <span className="max-w-[55%] text-right text-base text-ink-2">{meta}</span> : null}
       </div>
       {children}
     </li>
   );
 }
 
-export function EmptyState({ title, children }: { title: string; children?: ReactNode }) {
+/** Encadré à bord fin (même style que l'état vide), avec une petite étiquette facultative. */
+export function Panel({ label, title, children }: { label?: string; title: string; children?: ReactNode }) {
   return (
     <div className="max-w-[760px] rounded-3xl border-[1.5px] border-line px-7 py-8">
+      {label ? <p className="mb-1 text-[15px] text-ink-2">{label}</p> : null}
       <p className="text-[19px] font-bold">{title}</p>
       {children ? <div className="mt-1.5 text-[17px] text-ink-2">{children}</div> : null}
     </div>
   );
+}
+
+export function EmptyState({ title, children }: { title: string; children?: ReactNode }) {
+  return <Panel title={title}>{children}</Panel>;
 }

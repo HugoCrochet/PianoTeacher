@@ -104,6 +104,14 @@ test("connexion → séance → résultat + BPM → historique, puis déconnexio
   // Les statistiques ne comptent que le réalisé (2 × 5 min saisies), pas le planifié.
   await expect(page.getByText("10 min cette semaine.")).toBeVisible();
 
+  // Bilan, calendrier, temps par domaine, jalons : uniquement à partir des résultats réels.
+  await expect(page.getByRole("heading", { name: "Bilan de la semaine dernière" })).toBeVisible();
+  await expect(page.getByText("Une semaine de pause")).toBeVisible();
+  await expect(page.getByRole("img", { name: /^1 jour de pratique sur les 12 dernières semaines/ })).toBeVisible();
+  await expect(page.getByRole("img", { name: /^Cette semaine : .+ 5 min/ })).toBeVisible();
+  await expect(page.getByText("✓ Première séance enregistrée")).toBeVisible();
+  await expect(page.getByText("Prochain jalon : 10 jours de pratique")).toBeVisible();
+
   await page.goto("/parametres");
   await page.getByRole("button", { name: "Se déconnecter" }).click();
   await expect(page).toHaveURL(/\/connexion$/);

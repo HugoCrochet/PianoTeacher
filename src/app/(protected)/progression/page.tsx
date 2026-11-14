@@ -1,20 +1,19 @@
 import type { Metadata } from "next";
 import { ChartLine } from "lucide-react";
-import { BackLink, EmptyState, List, PageHead, Row, Screen, SectionTitle } from "@/components/layout/page";
+import { BackLink, EmptyState, List, Panel, PageHead, Row, Screen, SectionTitle } from "@/components/layout/page";
 import { Button } from "@/components/ui/button";
 import { Label, Select } from "@/components/ui/field";
 import { addDays, formatMinutes, formatShortDate, formatWeekdayShort, weekStartOf } from "@/lib/dates";
-import {
-  COMPETENCY_STATUS_LABEL,
-  DOMAIN_LABEL,
-  DOMAINS,
-  RESULT_LABEL,
-  type CompetencyStatus,
-} from "@/lib/domain/domains";
+import { COMPETENCY_STATUS_LABEL, DOMAIN_LABEL, RESULT_LABEL, type CompetencyStatus } from "@/lib/domain/domains";
 import { cn } from "@/lib/utils";
 import { getLogs } from "@/features/practice/server/queries";
-import { getContext } from "@/features/profile/server/profile";
-import { minutesPerDay, minutesPerDomain, totalMinutes } from "@/features/progress/domain/stats";
+import { getContext, plannerSettings } from "@/features/profile/server/profile";
+import { minutesForDate } from "@/features/planner/domain/build-plan";
+import { DomainWeeks, PracticeCalendar } from "@/features/progress/charts";
+import { minutesPerDomainByWeek, practiceCalendar } from "@/features/progress/domain/calendar";
+import { milestones } from "@/features/progress/domain/milestones";
+import { minutesPerDay, totalMinutes } from "@/features/progress/domain/stats";
+import { weeklySummary } from "@/features/progress/domain/weekly-summary";
 
 export const metadata: Metadata = { title: "Progression" };
 
@@ -57,16 +56,19 @@ function BpmChart({ points }: { points: { date: string; bpm: number }[] }) {
 }
 
 export default async function ProgressPage({ searchParams }: PageProps<"/progression">) {
-  const { supabase, today } = await getContext();
+  const { supabase, today, profile } = await getContext();
   const weekStart = weekStartOf(today);
   const previousStart = addDays(weekStart, -7);
-  const [logs, sessions, competencies] = await Promise.all([
-    getLogs(supabase, addDays(today, -180)),
+  const [logs, sessions, competencies, catalog, pieces, passages] = await Promise.all([
+    getLogs(supabase),
     supabase.from("practice_sessions").select("session_date").gte("session_date", weekStart),
     supabase
       .from("user_competencies")
       .select("status, competency:competencies ( name, domain )")
       .in("status", ["learning", "consolidating"]),
+    supabase.from("competencies").select("name, links:exercise_competencies ( exercise_id )"),
+    supabase.from("user_repertoire").select("id, title, status, updated_at"),
+    supabase.from("piece_passages").select("id, user_repertoire_id"),
   ]);
 
   const stats = logs.map((l) => ({ date: l.date, minutes: l.minutes, domain: l.domain, result: l.result }));
@@ -75,7 +77,32 @@ export default async function ProgressPage({ searchParams }: PageProps<"/progres
   const lastWeek = totalMinutes(stats, previousStart, addDays(weekStart, -1));
   const days = minutesPerDay(stats, weekStart);
   const peak = Math.max(1, ...days.map((d) => d.minutes));
-  const domains = minutesPerDomain(week);
+  const settings = plannerSettings(profile);
+  const calendar = practiceCalendar(stats, today, 12, (date) => minutesForDate(date, settings));
+  const domainWeeks = minutesPerDomainByWeek(stats, today, 4);
+  const summary = weeklySummary(
+    logs.map((l) => ({
+      date: l.date,
+      minutes: l.minutes,
+      domain: l.domain,
+      result: l.result,
+      bpm: l.bpm,
+      title: l.title,
+      trackId: l.exerciseId ?? l.passageId ?? l.pieceId ?? l.id,
+      key: l.key,
+    })),
+    previousStart,
+  );
+  const report = milestones(
+    logs,
+    (pieces.data ?? []).map((p) => ({
+      id: p.id,
+      title: p.title,
+      passageIds: (passages.data ?? []).filter((x) => x.user_repertoire_id === p.id).map((x) => x.id),
+      completedOn: p.status === "completed" ? p.updated_at.slice(0, 10) : null,
+    })),
+    (catalog.data ?? []).map((c) => ({ name: c.name, exerciseIds: c.links.map((l) => l.exercise_id) })),
+  );
   const retry = week.filter((l) => l.result === "retry").length;
   const sessionCount = new Set((sessions.data ?? []).map((s) => s.session_date)).size;
   const delta = thisWeek - lastWeek;
@@ -122,7 +149,7 @@ export default async function ProgressPage({ searchParams }: PageProps<"/progres
               main="Temps de pratique"
               detail="Cette semaine"
               meta={`${formatMinutes(thisWeek)}${
-                lastWeek > 0 ? `, ${formatMinutes(Math.abs(delta))} de ${delta >= 0 ? "plus" : "moins"} que la précédente` : ""
+                lastWeek > 0 && delta > 0 ? `, ${formatMinutes(delta)} de plus que la précédente` : ""
               }`}
             />
             <Row
@@ -134,12 +161,20 @@ export default async function ProgressPage({ searchParams }: PageProps<"/progres
             />
           </List>
 
-          <SectionTitle>Domaines travaillés cette semaine</SectionTitle>
-          <List>
-            {DOMAINS.map((d) => (
-              <Row key={d} main={DOMAIN_LABEL[d]} meta={domains[d] ? formatMinutes(domains[d]) : "pas encore"} />
-            ))}
-          </List>
+          <SectionTitle>Bilan de la semaine dernière</SectionTitle>
+          <Panel label={`Du ${formatShortDate(previousStart)} au ${formatShortDate(addDays(previousStart, 6))}`} title={summary.title}>
+            <ul className="mt-2 list-disc space-y-1 pl-5">
+              {summary.lines.map((line) => (
+                <li key={line}>{line}</li>
+              ))}
+            </ul>
+          </Panel>
+
+          <SectionTitle>Calendrier de pratique</SectionTitle>
+          <PracticeCalendar weeks={calendar} />
+
+          <SectionTitle>Temps par domaine, 4 dernières semaines</SectionTitle>
+          <DomainWeeks weeks={domainWeeks} />
 
           <SectionTitle>Tempo de travail</SectionTitle>
           {tracked.size === 0 ? (
@@ -164,6 +199,23 @@ export default async function ProgressPage({ searchParams }: PageProps<"/progres
               {points.length > 0 ? <BpmChart points={points} /> : null}
             </>
           )}
+
+          <SectionTitle>Records et jalons</SectionTitle>
+          <List>
+            {report.records.map((r) => (
+              <Row key={r.label} main={r.label} detail={formatShortDate(r.date)} meta={r.value} />
+            ))}
+            {report.next.map((n) => (
+              <Row key={n.label} main={`Prochain jalon : ${n.label}`} meta={n.remaining} />
+            ))}
+          </List>
+          {report.achieved.length > 0 ? (
+            <List className="mt-6">
+              {report.achieved.slice(0, 10).map((a) => (
+                <Row key={a.id} main={`✓ ${a.label}`} meta={formatShortDate(a.date)} />
+              ))}
+            </List>
+          ) : null}
 
           <SectionTitle>Compétences en cours</SectionTitle>
           {(competencies.data ?? []).length === 0 ? (
