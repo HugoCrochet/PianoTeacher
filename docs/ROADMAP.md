@@ -92,9 +92,15 @@ Le comportement attendu de chaque fonctionnalité livrée est décrit dans [PROD
 - [x] Migration appliquée au Supabase de production (14 novembre 2026).
 
 ### Phase C — Voir ses progrès
-1. Calendrier de pratique, temps par domaine sur 4 semaines, courbes BPM (`recharts`).
+1. Calendrier de pratique, temps par domaine sur 4 semaines, courbes BPM (SVG rendu serveur, sans dépendance).
 2. Bilan de la semaine, au ton encourageant.
 3. Records et jalons (première pièce jouée en entier, tonalité couverte…).
+
+**Fini quand**
+- [x] Calendrier de 12 semaines et temps par domaine sur 4 semaines, avec équivalent texte, calculés sur les seuls résultats réels.
+- [x] Bilan de la semaine dernière, encourageant même après une semaine sans pratique.
+- [x] Records et jalons datés au jour où ils sont franchis, avec les prochains jalons.
+- [x] Lisible à 390 px, sur iPad et sur desktop.
 
 ### Phase D — Fiabilité à coût nul
 1. Sauvegarde hebdomadaire automatique (GitHub Actions : dump SQL + PDF vers un dépôt privé).

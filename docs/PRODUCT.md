@@ -79,6 +79,10 @@ Chaque tâche d'improvisation affiche une variante : tonalité, grille (accords 
 
 ### Progression
 Temps de pratique par jour et par semaine, nombre de séances, historique des résultats, courbe BPM par exercice ou morceau, domaines travaillés, compétences en cours. Uniquement à partir des **logs réels**, jamais des tâches planifiées. Pas de score global, pas de mesure de précision ou de timing.
+- **Bilan de la semaine dernière** : jours et temps de pratique, domaines travaillés, hausses de tempo, nouvelles tonalités, réussites et tâches à retravailler. Toujours encourageant : la comparaison avec la semaine d'avant n'apparaît que si elle est en hausse ; une semaine vide devient « Une semaine de pause ».
+- **Calendrier de pratique** : 12 semaines, trois états (`Pas de pratique`, `Pratiqué`, `Durée prévue atteinte` selon les réglages actuels). Un jour sans pratique n'est jamais présenté comme un manque.
+- **Temps par domaine** sur les 4 dernières semaines (barres empilées + total par domaine en texte).
+- **Records et jalons** : paliers de jours de pratique (10, 25, 50…) et d'heures (5, 10, 25…), tonalité installée (3 réussites), tous les passages d'un morceau solides, morceau terminé, compétence acquise (même règle que le parcours) ; records de série et de plus longue séance ; prochains jalons avec ce qu'il reste.
 
 ### Paramètres
 Accessibles depuis l'accueil (en haut à droite). Profil, jours et durées de pratique, préférences de domaines, niveau de challenge, affichage de la série, export JSON/CSV.
