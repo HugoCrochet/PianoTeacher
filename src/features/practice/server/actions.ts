@@ -57,7 +57,7 @@ export async function recordResult(_prev: ActionState, formData: FormData): Prom
   // La RLS garantit que la tâche appartient à l'utilisateur connecté.
   const task = await supabase
     .from("planned_tasks")
-    .select("id, domain, exercise_id, user_repertoire_id, status, task_date")
+    .select("id, domain, exercise_id, user_repertoire_id, passage_id, key_signature, status, task_date")
     .eq("id", taskId)
     .maybeSingle();
   if (!task.data) return fail("Cette tâche n'existe plus.");
@@ -73,6 +73,8 @@ export async function recordResult(_prev: ActionState, formData: FormData): Prom
       domain: task.data.domain,
       exercise_id: task.data.exercise_id,
       user_repertoire_id: task.data.user_repertoire_id,
+      passage_id: task.data.passage_id,
+      key_signature: task.data.key_signature,
       practice_date: today,
       actual_minutes: minutes,
       bpm: bpm ?? null,

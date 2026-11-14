@@ -21,6 +21,7 @@ function exercise(domain: ExerciseDomain, n: number, extra: Partial<PlannerExerc
     bpmTarget: 60,
     bpmIncrement: 4,
     competencyIds: [],
+    keyMode: null,
     ...extra,
   };
 }
@@ -41,7 +42,7 @@ function input(overrides: Partial<PlannerInput> = {}): PlannerInput {
     },
     exercises,
     competencies: {},
-    activePieces: [{ id: "piece-1", title: "Prélude", tier: "growth", currentStep: "mesures 9 à 16" }],
+    activePieces: [{ id: "piece-1", title: "Prélude", tier: "growth", currentStep: "mesures 9 à 16", passages: [] }],
     logs: [],
     lockedDates: [],
     ...overrides,
@@ -172,7 +173,7 @@ describe("buildPlan", () => {
 
   describe("tâche « à retravailler »", () => {
     const failed = "technique-1";
-    const retryLog: PlannerLog = { exerciseId: failed, pieceId: null, date: WEEK, result: "retry", bpm: null };
+    const retryLog: PlannerLog = { exerciseId: failed, pieceId: null, date: WEEK, result: "retry", bpm: null, key: null, passageId: null };
 
     it("ne revient pas dès le lendemain", () => {
       const tasks = buildPlan(input({ fromDate: addDays(WEEK, 1), logs: [retryLog] }));
@@ -205,6 +206,8 @@ describe("buildPlan", () => {
       date,
       result: "success",
       bpm,
+      key: null,
+      passageId: null,
     });
     const only = [exercise("technique", 1), ...exercises.filter((e) => e.domain !== "technique")];
 
@@ -225,8 +228,8 @@ describe("buildPlan", () => {
     const tasks = buildPlan(
       input({
         activePieces: [
-          { id: "p-growth", title: "A", tier: "growth", currentStep: "" },
-          { id: "p-challenge", title: "B", tier: "challenge", currentStep: "" },
+          { id: "p-growth", title: "A", tier: "growth", currentStep: "", passages: [] },
+          { id: "p-challenge", title: "B", tier: "challenge", currentStep: "", passages: [] },
         ],
       }),
     );
@@ -244,5 +247,59 @@ describe("buildPlan", () => {
       settings: { ...base.settings, levels: { technique: 2 }, challengeLevel: "ambitious" },
     });
     expect(buildPlan(ambitious).some((t) => t.exerciseId === "technique-2")).toBe(true);
+  });
+  describe("tonalités (exercices transposables)", () => {
+    const cycle = exercise("scales_harmony", 1, { keyMode: "major" });
+    const only = [cycle, ...exercises.filter((e) => e.domain !== "scales_harmony")];
+    const level3 = (base: PlannerInput): PlannerInput => ({
+      ...base,
+      settings: { ...base.settings, levels: { ...base.settings.levels, scales_harmony: 3 } },
+    });
+
+    it("impose une tonalité aux seuls exercices transposables", () => {
+      const tasks = buildPlan(input({ exercises: only }));
+      for (const t of tasks) expect(t.keySignature !== null).toBe(t.exerciseId === cycle.id);
+    });
+
+    it("propose d'abord les tonalités jamais jouées, sans répétition dans la semaine", () => {
+      const played: PlannerLog = { exerciseId: cycle.id, pieceId: null, date: addDays(WEEK, -2), result: "success", bpm: null, key: "Do majeur", passageId: null };
+      const tasks = buildPlan(level3(input({ exercises: only, logs: [played] }))).filter((t) => t.exerciseId === cycle.id);
+      expect(tasks.length).toBeGreaterThan(1);
+      expect(tasks[0].keySignature).toBe("Sol majeur");
+      expect(tasks[0].reason).toContain("en Sol majeur, tonalité jamais jouée");
+      const keys = tasks.map((t) => t.keySignature);
+      expect(new Set(keys).size).toBe(keys.length);
+      expect(keys).not.toContain("Do majeur");
+    });
+
+    it("reste dans les tonalités accessibles au niveau 1 (2 altérations au plus)", () => {
+      const tasks = buildPlan(input({ exercises: only })).filter((t) => t.exerciseId === cycle.id);
+      const allowed = ["Do majeur", "Sol majeur", "Fa majeur", "Ré majeur", "Si♭ majeur"];
+      for (const t of tasks) expect(allowed).toContain(t.keySignature);
+    });
+  });
+
+  describe("passages", () => {
+    const passages = [
+      { id: "pa", position: 1, label: "Mesures 1–8", targetBpm: 60 },
+      { id: "pb", position: 2, label: "Mesures 9–16", targetBpm: null },
+    ];
+    const piece = { id: "piece-1", title: "Prélude", tier: "growth" as const, currentStep: "", passages };
+
+    it("cible le passage raté la dernière fois, avec sa raison et son tempo", () => {
+      const logs: PlannerLog[] = [
+        { exerciseId: null, pieceId: "piece-1", date: addDays(WEEK, -1), result: "retry", bpm: 50, key: null, passageId: "pa" },
+      ];
+      const first = buildPlan(input({ activePieces: [piece], logs })).find((t) => t.pieceId === "piece-1");
+      expect(first?.passageId).toBe("pa");
+      expect(first?.targetBpm).toBe(60);
+      expect(first?.reason).toBe("passage le plus fragile : « Mesures 1–8 », à retravailler la dernière fois");
+    });
+
+    it("garde le comportement d'avant pour un morceau sans passage", () => {
+      const task = buildPlan(input()).find((t) => t.pieceId === "piece-1");
+      expect(task?.passageId).toBeNull();
+      expect(task?.reason).toBe("pièce en cours — mesures 9 à 16");
+    });
   });
 });

@@ -7,13 +7,15 @@ import {
   type PracticeResult,
   type Tier,
 } from "@/lib/domain/domains";
+import { chooseKey, maxAccidentalsForLevel, type KeyLog, type KeyMode } from "@/lib/domain/keys";
 import { bpmProgress } from "@/features/practice/domain/bpm";
+import { choosePassage, type Passage } from "@/features/repertoire/domain/passages";
 
 /**
  * Planner déterministe : mêmes entrées → même plan (docs/PRODUCT.md §6).
  * Fonction pure, sans dépendance à React, Next.js ou Supabase.
  */
-export const PLANNER_VERSION = "1.0.0";
+export const PLANNER_VERSION = "1.1.0";
 
 /** Une tâche « à retravailler » ne revient pas avant ce nombre de jours. */
 export const RETRY_SPACING_DAYS = 2;
@@ -40,6 +42,8 @@ export interface PlannerExercise {
   bpmTarget: number | null;
   bpmIncrement: number;
   competencyIds: readonly string[];
+  /** Exercice transposable : le planner choisit la tonalité du jour dans ce mode. */
+  keyMode: KeyMode | null;
 }
 
 export interface PlannerPiece {
@@ -47,6 +51,8 @@ export interface PlannerPiece {
   title: string;
   tier: Tier;
   currentStep: string;
+  /** Passages du morceau, dans l'ordre (vide = morceau travaillé en entier). */
+  passages: readonly Passage[];
 }
 
 /** Résultat réellement enregistré. Les tâches planifiées non faites n'existent pas ici : pas de dette. */
@@ -56,6 +62,9 @@ export interface PlannerLog {
   date: IsoDate;
   result: PracticeResult;
   bpm: number | null;
+  /** Tonalité réellement travaillée (gammes et harmonie uniquement), sinon null. */
+  key: string | null;
+  passageId: string | null;
 }
 
 export interface PlannerInput {
@@ -82,6 +91,9 @@ export interface DraftTask {
   plannedMinutes: number;
   targetBpm: number | null;
   reason: string;
+  /** Tonalité imposée pour un exercice transposable. */
+  keySignature: string | null;
+  passageId: string | null;
 }
 
 function roundTo5(n: number): number {
@@ -194,6 +206,8 @@ export function buildPlan(input: PlannerInput): DraftTask[] {
     (a, b) => TIER_ORDER[a.tier] - TIER_ORDER[b.tier] || a.title.localeCompare(b.title, "fr") || a.id.localeCompare(b.id),
   );
   const uses = new Map<string, number>();
+  const keysThisWeek = new Map<string, number>();
+  const passagesThisWeek = new Map<string, number>();
   const replanned = new Set<string>();
   const tasks: DraftTask[] = [];
   let cursor = 0;
@@ -245,6 +259,19 @@ export function buildPlan(input: PlannerInput): DraftTask[] {
       if (!pick) return;
       if (useCount(pick) > 0 && pick.score >= 100) replanned.add(pick.exercise.id);
       uses.set(pick.exercise.id, useCount(pick) + 1);
+
+      // Exercice transposable : tonalité jamais jouée d'abord, sinon la moins travaillée.
+      let keySignature: string | null = null;
+      let keyReason = "";
+      if (pick.exercise.keyMode) {
+        const history: KeyLog[] = input.logs.flatMap((l) =>
+          l.key && l.date < date ? [{ key: l.key, date: l.date, result: l.result }] : [],
+        );
+        const choice = chooseKey(pick.exercise.keyMode, maxAccidentalsForLevel(userLevel), history, keysThisWeek);
+        keysThisWeek.set(choice.key, (keysThisWeek.get(choice.key) ?? 0) + 1);
+        keySignature = choice.key;
+        keyReason = choice.neverPlayed ? ` · en ${choice.key}, tonalité jamais jouée` : ` · en ${choice.key}, la moins travaillée`;
+      }
       if (!generate) return;
 
       const bpm = bpmProgress(
@@ -252,9 +279,9 @@ export function buildPlan(input: PlannerInput): DraftTask[] {
         pick.exercise.bpmIncrement,
         input.logs.filter((l) => l.exerciseId === pick.exercise.id && l.date < date),
       );
-      const reason = bpm.justRaised
-        ? `${pick.reason} · +${pick.exercise.bpmIncrement} BPM après 3 réussites`
-        : pick.reason;
+      const reason =
+        (bpm.justRaised ? `${pick.reason} · +${pick.exercise.bpmIncrement} BPM après 3 réussites` : pick.reason) +
+        keyReason;
       tasks.push({
         date,
         position: position++,
@@ -264,12 +291,18 @@ export function buildPlan(input: PlannerInput): DraftTask[] {
         plannedMinutes: exerciseSlots[slot],
         targetBpm: bpm.target,
         reason,
+        keySignature,
+        passageId: null,
       });
     });
 
+    // Morceau découpé : on cible le passage le plus fragile (calculé même hors génération, pour la rotation).
+    const pieceHistory = piece ? input.logs.filter((l) => l.pieceId === piece.id && l.date < date) : [];
+    const passage = piece ? choosePassage(piece.passages, pieceHistory, passagesThisWeek) : null;
+    if (passage) passagesThisWeek.set(passage.passage.id, (passagesThisWeek.get(passage.passage.id) ?? 0) + 1);
+
     if (piece && generate) {
-      const history = input.logs.filter((l) => l.pieceId === piece.id && l.date < date);
-      const last = history[history.length - 1];
+      const last = pieceHistory[pieceHistory.length - 1];
       const step = piece.currentStep.trim();
       const base = last?.result === "retry" ? "à retravailler la dernière fois" : "pièce en cours";
       tasks.push({
@@ -279,8 +312,10 @@ export function buildPlan(input: PlannerInput): DraftTask[] {
         exerciseId: null,
         pieceId: piece.id,
         plannedMinutes: repertoire,
-        targetBpm: null,
-        reason: step ? `${base} — ${step}` : base,
+        targetBpm: passage?.passage.targetBpm ?? null,
+        reason: passage ? passage.reason : step ? `${base} — ${step}` : base,
+        keySignature: null,
+        passageId: passage?.passage.id ?? null,
       });
     }
   }

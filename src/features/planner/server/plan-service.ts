@@ -2,24 +2,26 @@ import "server-only";
 import { addDays, weekStartOf, type IsoDate } from "@/lib/dates";
 import type { CompetencyStatus, ExerciseDomain, PracticeResult, Tier } from "@/lib/domain/domains";
 import { plannerSettings, type AppContext } from "@/features/profile/server/profile";
+import { effectiveKey, type KeyMode } from "@/lib/domain/keys";
 import { buildPlan, PLANNER_VERSION, type PlannerInput } from "../domain/build-plan";
 
 type PlannerData = Pick<PlannerInput, "exercises" | "competencies" | "activePieces" | "logs">;
 
 async function loadPlannerData({ supabase, today }: AppContext): Promise<PlannerData> {
-  const [exercises, links, competencies, statuses, pieces, logs] = await Promise.all([
-    supabase.from("exercises").select("id, slug, domain, level, bpm_target, bpm_increment"),
+  const [exercises, links, competencies, statuses, pieces, passages, logs] = await Promise.all([
+    supabase.from("exercises").select("id, slug, domain, level, bpm_target, bpm_increment, key_mode"),
     supabase.from("exercise_competencies").select("exercise_id, competency_id"),
     supabase.from("competencies").select("id, name"),
     supabase.from("user_competencies").select("competency_id, status"),
     supabase.from("user_repertoire").select("id, title, tier, current_step").eq("status", "active"),
+    supabase.from("piece_passages").select("id, user_repertoire_id, position, label, target_bpm").order("position"),
     supabase
       .from("practice_logs")
-      .select("exercise_id, user_repertoire_id, practice_date, result, bpm")
+      .select("exercise_id, user_repertoire_id, passage_id, domain, key_signature, practice_date, result, bpm, exercise:exercises ( key_signature )")
       .gte("practice_date", addDays(today, -180))
       .order("practiced_at", { ascending: true }),
   ]);
-  const failed = [exercises, links, competencies, statuses, pieces, logs].find((r) => r.error);
+  const failed = [exercises, links, competencies, statuses, pieces, passages, logs].find((r) => r.error);
   if (failed?.error) throw new Error(`Chargement du planner impossible : ${failed.error.message}`);
 
   const statusById = new Map((statuses.data ?? []).map((s) => [s.competency_id, s.status as CompetencyStatus]));
@@ -32,6 +34,7 @@ async function loadPlannerData({ supabase, today }: AppContext): Promise<Planner
       bpmTarget: e.bpm_target,
       bpmIncrement: e.bpm_increment,
       competencyIds: (links.data ?? []).filter((l) => l.exercise_id === e.id).map((l) => l.competency_id),
+      keyMode: (e.key_mode as KeyMode | null) ?? null,
     })),
     competencies: Object.fromEntries(
       (competencies.data ?? []).map((c) => [c.id, { name: c.name, status: statusById.get(c.id) ?? "upcoming" }]),
@@ -41,6 +44,9 @@ async function loadPlannerData({ supabase, today }: AppContext): Promise<Planner
       title: p.title,
       tier: p.tier as Tier,
       currentStep: p.current_step,
+      passages: (passages.data ?? [])
+        .filter((x) => x.user_repertoire_id === p.id)
+        .map((x) => ({ id: x.id, position: x.position, label: x.label, targetBpm: x.target_bpm })),
     })),
     logs: (logs.data ?? []).map((l) => ({
       exerciseId: l.exercise_id,
@@ -48,6 +54,8 @@ async function loadPlannerData({ supabase, today }: AppContext): Promise<Planner
       date: l.practice_date,
       result: l.result as PracticeResult,
       bpm: l.bpm,
+      key: effectiveKey(l.domain, l.key_signature, l.exercise?.key_signature ?? null),
+      passageId: l.passage_id,
     })),
   };
 }
@@ -67,6 +75,8 @@ async function insertDrafts(ctx: AppContext, planId: string, input: PlannerInput
       planned_minutes: t.plannedMinutes,
       target_bpm: t.targetBpm,
       reason: t.reason,
+      key_signature: t.keySignature,
+      passage_id: t.passageId,
     })),
   );
   if (error) throw new Error(`Enregistrement du plan impossible : ${error.message}`);

@@ -73,6 +73,8 @@ export async function replaceTask(_prev: ActionState, formData: FormData): Promi
     .update({
       exercise_id: exercise.data.id,
       user_repertoire_id: null,
+      passage_id: null,
+      key_signature: null,
       domain: exercise.data.domain,
       target_bpm: exercise.data.bpm_target,
       reason: "choisi par toi",
