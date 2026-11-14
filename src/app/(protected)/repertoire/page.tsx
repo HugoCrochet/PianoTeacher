@@ -4,14 +4,8 @@ import { Music } from "lucide-react";
 import { SubmitButton } from "@/components/forms/action-form";
 import { BackLink, EmptyState, List, PageHead, Row, Screen } from "@/components/layout/page";
 import { buttonVariants } from "@/components/ui/button";
-import {
-  PIECE_STATUS_LABEL,
-  STYLE_LABEL,
-  TIER_LABEL,
-  type PieceStatus,
-  type Style,
-  type Tier,
-} from "@/lib/domain/domains";
+import { PIECE_STATUS_LABEL, STYLE_LABEL, type PieceStatus, type Style } from "@/lib/domain/domains";
+import { PERIOD_LABEL, PERIODS, isPeriod, type Period } from "@/features/repertoire/domain/catalog-search";
 import { cn } from "@/lib/utils";
 import { addFromCatalog } from "@/features/repertoire/server/actions";
 import { getContext } from "@/features/profile/server/profile";
@@ -27,21 +21,26 @@ type Tab = (typeof TABS)[number]["id"];
 
 export default async function RepertoirePage({ searchParams }: PageProps<"/repertoire">) {
   const { supabase } = await getContext();
-  const param = (await searchParams).onglet;
+  const sp = await searchParams;
+  const param = sp.onglet;
   const tab: Tab = TABS.some((t) => t.id === param) ? (param as Tab) : "en-cours";
+  const period: Period | null = isPeriod(sp.courant) ? sp.courant : null;
 
   const [pieces, catalog] = await Promise.all([
     supabase
       .from("user_repertoire")
-      .select("id, catalog_id, title, composer, tier, status, current_step, pdf_asset_id")
+      .select("id, catalog_id, title, composer, period, status, current_step, pdf_asset_id")
       .order("title"),
-    supabase.from("repertoire_catalog").select("id, title, composer, style, level, tier, rights_note").order("level").order("title"),
+    supabase.from("repertoire_catalog").select("id, title, composer, style, level, period, rights_note").order("level").order("title"),
   ]);
   if (pieces.error || catalog.error) throw new Error("Chargement du répertoire impossible.");
 
   const active = pieces.data.filter((p) => p.status === "active").length;
-  const mine = pieces.data
-    .filter((p) => (tab === "termines" ? p.status === "completed" : p.status !== "completed"))
+  const inTab = pieces.data.filter((p) => (tab === "termines" ? p.status === "completed" : p.status !== "completed"));
+  // Filtre par courant : seulement les courants présents dans l'onglet.
+  const periods = PERIODS.filter((x) => inTab.some((p) => p.period === x));
+  const mine = inTab
+    .filter((p) => !period || p.period === period)
     .sort((a, b) => Number(b.status === "active") - Number(a.status === "active"));
   const owned = new Set(pieces.data.map((p) => p.catalog_id));
   // Classique d'abord, puis musiques de film (docs/PRODUCT.md §5).
@@ -83,11 +82,11 @@ export default async function RepertoirePage({ searchParams }: PageProps<"/reper
                 main={c.title}
                 detail={
                   <>
-                    {c.composer} · {STYLE_LABEL[c.style as Style]} · difficulté {c.level} sur 5
+                    {[c.composer, isPeriod(c.period) ? PERIOD_LABEL[c.period] : STYLE_LABEL[c.style as Style]].join(" · ")} ·
+                    difficulté {c.level} sur 5
                     <span className="block">{c.rights_note}</span>
                   </>
                 }
-                meta={TIER_LABEL[c.tier as Tier]}
               >
                 <form action={addFromCatalog} className="mt-3">
                   <input type="hidden" name="id" value={c.id} />
@@ -99,33 +98,57 @@ export default async function RepertoirePage({ searchParams }: PageProps<"/reper
             ))}
           </List>
         )
-      ) : mine.length === 0 ? (
-        <EmptyState title={tab === "termines" ? "Aucun morceau terminé pour l’instant" : "Aucun morceau pour l’instant"}>
-          <p>
-            {tab === "termines"
-              ? "Les pièces que tu marques « Terminé » apparaîtront ici."
-              : "Ajoute un morceau personnel ou pioche dans les suggestions."}
-          </p>
-        </EmptyState>
       ) : (
-        <List>
-          {mine.map((p) => (
-            <Row
-              key={p.id}
-              main={
-                <Link href={`/repertoire/${p.id}`} className="underline-offset-4 hover:underline">
-                  {p.title}
-                </Link>
-              }
-              detail={[p.composer, TIER_LABEL[p.tier as Tier], p.pdf_asset_id ? "partition PDF" : null]
-                .filter(Boolean)
-                .join(" · ")}
-              meta={
-                p.status === "active" && p.current_step ? p.current_step : PIECE_STATUS_LABEL[p.status as PieceStatus]
-              }
-            />
-          ))}
-        </List>
+        <>
+          {periods.length > 1 ? (
+            <nav aria-label="Filtrer par courant" className="mb-5 flex flex-wrap gap-2">
+              {[null, ...periods].map((x) => {
+                const href = `/repertoire?${new URLSearchParams({
+                  ...(tab !== "en-cours" ? { onglet: tab } : {}),
+                  ...(x ? { courant: x } : {}),
+                }).toString()}`;
+                return (
+                  <Link
+                    key={x ?? "tous"}
+                    href={href}
+                    aria-current={period === x ? "page" : undefined}
+                    className={cn(buttonVariants({ variant: period === x ? "selected" : "outline", size: "sm" }))}
+                  >
+                    {x ? PERIOD_LABEL[x] : "Tous les courants"}
+                  </Link>
+                );
+              })}
+            </nav>
+          ) : null}
+          {mine.length === 0 ? (
+            <EmptyState title={tab === "termines" ? "Aucun morceau terminé pour l’instant" : "Aucun morceau pour l’instant"}>
+              <p>
+                {tab === "termines"
+                  ? "Les pièces que tu marques « Terminé » apparaîtront ici."
+                  : "Ajoute un morceau personnel ou pioche dans les suggestions."}
+              </p>
+            </EmptyState>
+          ) : (
+            <List>
+              {mine.map((p) => (
+                <Row
+                  key={p.id}
+                  main={
+                    <Link href={`/repertoire/${p.id}`} className="underline-offset-4 hover:underline">
+                      {p.title}
+                    </Link>
+                  }
+                  detail={[p.composer, isPeriod(p.period) ? PERIOD_LABEL[p.period] : null, p.pdf_asset_id ? "partition PDF" : null]
+                    .filter(Boolean)
+                    .join(" · ")}
+                  meta={
+                    p.status === "active" && p.current_step ? p.current_step : PIECE_STATUS_LABEL[p.status as PieceStatus]
+                  }
+                />
+              ))}
+            </List>
+          )}
+        </>
       )}
 
       <Link href="/repertoire/nouveau" className={buttonVariants({ className: "mt-7 self-start" })}>

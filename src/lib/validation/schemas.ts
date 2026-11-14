@@ -1,5 +1,6 @@
 import { z } from "zod";
 import { EXERCISE_DOMAINS } from "@/lib/domain/domains";
+import { PERIODS } from "@/features/repertoire/domain/catalog-search";
 import { isIsoDate } from "@/lib/dates";
 
 /** Champ de formulaire vide → undefined. */
@@ -35,10 +36,9 @@ const pieceFields = {
   title: text(200).min(1, "Le titre est requis."),
   composer: text(120).default(""),
   style: z.enum(["classical", "film", "other"]),
-  tier: z.enum(["comfort", "growth", "challenge"]),
+  period: z.preprocess(emptyToUndefined, z.enum(PERIODS, "Courant inconnu.").optional()),
   status: z.enum(["to_discover", "active", "paused", "completed"]),
   level: optionalInt(1, 5),
-  feltDifficulty: optionalInt(1, 5),
   currentStep: text(200).default(""),
   notes: text(4000).default(""),
   sourceUrl: z.preprocess(

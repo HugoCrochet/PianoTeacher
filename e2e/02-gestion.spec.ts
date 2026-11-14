@@ -11,7 +11,7 @@ test("répertoire : suggestion, partition PDF privée, suppression", async ({ pa
   await login(page);
   await page.goto("/repertoire?onglet=suggestions");
   await page.getByRole("button", { name: "Ajouter à mes morceaux" }).first().click();
-  await expect(page).toHaveURL(/\/repertoire\/[0-9a-f-]{36}$/);
+  await expect(page).toHaveURL(/\/repertoire\/[0-9a-f-]{36}(\?nouveau=1)?(#partition)?$/);
   await expect(page.getByRole("heading", { name: "Partition" })).toBeVisible();
 
   // Un fichier qui n'est pas un PDF est refusé.

@@ -3,10 +3,11 @@ import { notFound } from "next/navigation";
 import { Music } from "lucide-react";
 import { z } from "zod";
 import { ActionForm, SubmitButton } from "@/components/forms/action-form";
-import { BackLink, List, PageHead, Row, Screen, SectionTitle } from "@/components/layout/page";
+import { BackLink, List, PageHead, Panel, Row, Screen, SectionTitle } from "@/components/layout/page";
 import { buttonVariants } from "@/components/ui/button";
 import { formatShortDate } from "@/lib/dates";
-import { PIECE_STATUS_LABEL, RESULT_LABEL, TIER_LABEL, type PieceStatus, type PracticeResult, type Tier } from "@/lib/domain/domains";
+import { PIECE_STATUS_LABEL, RESULT_LABEL, type PieceStatus, type PracticeResult } from "@/lib/domain/domains";
+import { PERIOD_LABEL, isImslpUrl, isPeriod } from "@/features/repertoire/domain/catalog-search";
 import { getContext } from "@/features/profile/server/profile";
 import { PdfUpload } from "@/features/repertoire/pdf-upload";
 import { PieceFields } from "@/features/repertoire/piece-fields";
@@ -28,8 +29,9 @@ import {
 
 export const metadata: Metadata = { title: "Morceau" };
 
-export default async function PiecePage({ params }: PageProps<"/repertoire/[id]">) {
+export default async function PiecePage({ params, searchParams }: PageProps<"/repertoire/[id]">) {
   const { id } = await params;
+  const justAdded = (await searchParams).nouveau === "1";
   if (!z.uuid().safeParse(id).success) notFound();
   const { supabase, user } = await getContext();
   const { data: piece } = await supabase
@@ -67,12 +69,37 @@ export default async function PiecePage({ params }: PageProps<"/repertoire/[id]"
         icon={Music}
         tint="butter"
         title={piece.title}
-        subtitle={[piece.composer, PIECE_STATUS_LABEL[piece.status as PieceStatus], TIER_LABEL[piece.tier as Tier]]
+        subtitle={[piece.composer, isPeriod(piece.period) ? PERIOD_LABEL[piece.period] : null, PIECE_STATUS_LABEL[piece.status as PieceStatus]]
           .filter(Boolean)
           .join(" · ")}
       />
 
-      <SectionTitle>Partition</SectionTitle>
+      {justAdded ? (
+        <div className="mb-2">
+          <Panel title="Morceau ajouté">
+            <p>Il ne manque plus que la partition : trouve une édition libre de droits, télécharge le PDF, puis importe-le ci-dessous.</p>
+          </Panel>
+        </div>
+      ) : null}
+
+      <div id="partition" className="scroll-mt-6">
+        <SectionTitle>Partition</SectionTitle>
+      </div>
+      {!piece.pdf && isImslpUrl(piece.source_url) ? (
+        <div className="mb-5 max-w-[760px]">
+          <a
+            href={piece.source_url ?? undefined}
+            target="_blank"
+            rel="noreferrer"
+            className={buttonVariants({ variant: "outline", size: "md" })}
+          >
+            Trouver la partition sur IMSLP
+          </a>
+          <p className="mt-2 text-[15px] text-ink-2">
+            Choisis une édition marquée libre de droits dans ton pays (mention « Public Domain » ; évite « Non-PD EU »).
+          </p>
+        </div>
+      ) : null}
       {piece.pdf ? (
         <div className="mb-5 max-w-[760px]">
           <p className="text-[17px]">
@@ -180,10 +207,9 @@ export default async function PiecePage({ params }: PageProps<"/repertoire/[id]"
             title: piece.title,
             composer: piece.composer,
             style: piece.style,
-            tier: piece.tier,
+            period: piece.period,
             status: piece.status,
             level: piece.level,
-            feltDifficulty: piece.felt_difficulty,
             currentStep: piece.current_step,
             notes: piece.notes,
             sourceUrl: piece.source_url,

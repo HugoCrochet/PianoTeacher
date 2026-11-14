@@ -52,7 +52,7 @@ export const PIECE_STATUS_LABEL: Record<PieceStatus, string> = {
 
 export type Style = "classical" | "film" | "other";
 export const STYLE_LABEL: Record<Style, string> = {
-  classical: "Classique",
+  classical: "Musique classique",
   film: "Musique de film",
   other: "Autre",
 };

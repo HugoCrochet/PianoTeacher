@@ -1,14 +1,14 @@
 import { Input, Label, Select, Textarea } from "@/components/ui/field";
-import { PIECE_STATUS_LABEL, STYLE_LABEL, TIER_LABEL } from "@/lib/domain/domains";
+import { PIECE_STATUS_LABEL, STYLE_LABEL } from "@/lib/domain/domains";
+import { PERIOD_LABEL } from "./domain/catalog-search";
 
 export interface PieceValues {
   title: string;
   composer: string;
   style: string;
-  tier: string;
+  period: string | null;
   status: string;
   level: number | null;
-  feltDifficulty: number | null;
   currentStep: string;
   notes: string;
   sourceUrl: string | null;
@@ -17,7 +17,7 @@ export interface PieceValues {
 const scale = [1, 2, 3, 4, 5];
 
 /** Champs communs à l'ajout et à la modification d'un morceau. */
-export function PieceFields({ values }: { values?: PieceValues }) {
+export function PieceFields({ values }: { values?: Partial<PieceValues> }) {
   return (
     <div className="grid max-w-[760px] gap-4 md:grid-cols-2">
       <div className="md:col-span-2">
@@ -49,9 +49,10 @@ export function PieceFields({ values }: { values?: PieceValues }) {
         </Select>
       </div>
       <div>
-        <Label htmlFor="tier">Pour toi, c’est une pièce…</Label>
-        <Select id="tier" name="tier" defaultValue={values?.tier ?? "growth"}>
-          {Object.entries(TIER_LABEL).map(([value, label]) => (
+        <Label htmlFor="period">Courant</Label>
+        <Select id="period" name="period" defaultValue={values?.period ?? ""}>
+          <option value="">Non précisé</option>
+          {Object.entries(PERIOD_LABEL).map(([value, label]) => (
             <option key={value} value={value}>
               {label}
             </option>
@@ -61,17 +62,6 @@ export function PieceFields({ values }: { values?: PieceValues }) {
       <div>
         <Label htmlFor="level">Difficulté estimée</Label>
         <Select id="level" name="level" defaultValue={values?.level ?? ""}>
-          <option value="">Non précisée</option>
-          {scale.map((n) => (
-            <option key={n} value={n}>
-              {n} sur 5
-            </option>
-          ))}
-        </Select>
-      </div>
-      <div>
-        <Label htmlFor="feltDifficulty">Difficulté ressentie</Label>
-        <Select id="feltDifficulty" name="feltDifficulty" defaultValue={values?.feltDifficulty ?? ""}>
           <option value="">Non précisée</option>
           {scale.map((n) => (
             <option key={n} value={n}>

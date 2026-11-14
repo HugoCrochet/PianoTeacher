@@ -41,10 +41,9 @@ export async function createPiece(_prev: ActionState, formData: FormData): Promi
       title: p.title,
       composer: p.composer,
       style: p.style,
-      tier: p.tier,
+      period: p.period ?? null,
       status: p.status,
       level: p.level ?? null,
-      felt_difficulty: p.feltDifficulty ?? null,
       current_step: p.currentStep,
       notes: p.notes,
       source_url: p.sourceUrl ?? null,
@@ -54,7 +53,8 @@ export async function createPiece(_prev: ActionState, formData: FormData): Promi
   if (created.error) return fail("Le morceau n'a pas pu être ajouté. Réessaie.");
   if (p.status === "active") await replan(ctx);
   revalidatePath("/", "layout");
-  redirect(`/repertoire/${created.data.id}`);
+  // La fiche s'ouvre sur la partition : lien IMSLP et import du PDF.
+  redirect(`/repertoire/${created.data.id}?nouveau=1#partition`);
 }
 
 export async function addFromCatalog(formData: FormData): Promise<void> {
@@ -63,7 +63,7 @@ export async function addFromCatalog(formData: FormData): Promise<void> {
   const ctx = await getContext();
   const item = await ctx.supabase
     .from("repertoire_catalog")
-    .select("id, title, composer, style, level, tier, source_url")
+    .select("id, title, composer, style, level, period, source_url")
     .eq("id", parsed.data.id)
     .maybeSingle();
   if (!item.data) return;
@@ -76,7 +76,7 @@ export async function addFromCatalog(formData: FormData): Promise<void> {
       composer: item.data.composer,
       style: item.data.style,
       level: item.data.level,
-      tier: item.data.tier,
+      period: item.data.period,
       status: "active",
       source_url: item.data.source_url,
     })
@@ -85,7 +85,7 @@ export async function addFromCatalog(formData: FormData): Promise<void> {
   if (created.error) return;
   await replan(ctx);
   revalidatePath("/", "layout");
-  redirect(`/repertoire/${created.data.id}`);
+  redirect(`/repertoire/${created.data.id}?nouveau=1#partition`);
 }
 
 export async function updatePiece(_prev: ActionState, formData: FormData): Promise<ActionState> {
@@ -99,10 +99,9 @@ export async function updatePiece(_prev: ActionState, formData: FormData): Promi
       title: p.title,
       composer: p.composer,
       style: p.style,
-      tier: p.tier,
+      period: p.period ?? null,
       status: p.status,
       level: p.level ?? null,
-      felt_difficulty: p.feltDifficulty ?? null,
       current_step: p.currentStep,
       notes: p.notes,
       source_url: p.sourceUrl ?? null,
