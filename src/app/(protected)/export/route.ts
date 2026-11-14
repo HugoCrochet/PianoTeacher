@@ -44,17 +44,18 @@ export async function GET(request: NextRequest) {
     });
   }
 
-  const [profile, competencies, repertoire, pdfs, plans, tasks, sessions, logs] = await Promise.all([
+  const [profile, competencies, repertoire, passages, pdfs, plans, tasks, sessions, logs] = await Promise.all([
     supabase.from("profiles").select("*"),
     supabase.from("user_competencies").select("*, competency:competencies ( slug, name )"),
     supabase.from("user_repertoire").select("*"),
+    supabase.from("piece_passages").select("*").order("position"),
     supabase.from("pdf_assets").select("*"),
     supabase.from("practice_plans").select("*"),
     supabase.from("planned_tasks").select("*, exercise:exercises ( slug, title )"),
     supabase.from("practice_sessions").select("*"),
     supabase.from("practice_logs").select("*, exercise:exercises ( slug, title )"),
   ]);
-  if ([profile, competencies, repertoire, pdfs, plans, tasks, sessions, logs].some((r) => r.error)) {
+  if ([profile, competencies, repertoire, passages, pdfs, plans, tasks, sessions, logs].some((r) => r.error)) {
     return NextResponse.json({ error: "Export impossible." }, { status: 500 });
   }
   const body = {
@@ -63,6 +64,7 @@ export async function GET(request: NextRequest) {
     profile: profile.data?.[0] ?? null,
     user_competencies: competencies.data,
     user_repertoire: repertoire.data,
+    piece_passages: passages.data,
     pdf_assets: pdfs.data,
     practice_plans: plans.data,
     planned_tasks: tasks.data,

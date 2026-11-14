@@ -2,7 +2,7 @@
 -- Lancer : pnpm test:db
 begin;
 create extension if not exists pgtap with schema extensions;
-select plan(19);
+select plan(25);
 
 -- Deux utilisateurs
 insert into auth.users (id, instance_id, aud, role, email)
@@ -46,6 +46,17 @@ select throws_ok(
   $$insert into public.exercises (slug, title, domain, level, objective, instructions, estimated_minutes, source_type)
     values ('x', 'x', 'technique', 1, 'x', 'x', 5, 'original')$$,
   '42501', null, 'le catalogue est en lecture seule');
+select lives_ok(
+  $$insert into public.user_repertoire (id, user_id, title) values ('30000000-0000-0000-0000-000000000001', '00000000-0000-0000-0000-00000000000a', 'Prélude')$$,
+  'A ajoute un morceau');
+select lives_ok(
+  $$insert into public.piece_passages (id, user_id, user_repertoire_id, position, label)
+    values ('40000000-0000-0000-0000-000000000001', '00000000-0000-0000-0000-00000000000a', '30000000-0000-0000-0000-000000000001', 1, 'Mesures 1–8')$$,
+  'A découpe son morceau en passages');
+select throws_ok(
+  $$insert into public.piece_passages (user_id, user_repertoire_id, position, label)
+    values ('00000000-0000-0000-0000-00000000000b', '30000000-0000-0000-0000-000000000001', 2, 'x')$$,
+  '42501', null, 'A ne peut pas créer un passage au nom de B');
 select is((select count(*)::int from public.practice_logs), 1, 'A voit son résultat');
 select ok((select count(*) from public.exercises) > 0, 'A lit le catalogue');
 
@@ -57,11 +68,18 @@ select is((select count(*)::int from public.practice_sessions), 0, 'B ne voit pa
 select is((select count(*)::int from public.practice_logs), 0, 'B ne voit pas les résultats de A');
 select is((select count(*)::int from public.pdf_assets), 0, 'B ne voit pas les PDF de A');
 select is((select count(*)::int from storage.objects where bucket_id = 'personal-scores'), 0, 'B ne voit pas les fichiers de A');
+select is((select count(*)::int from public.piece_passages), 0, 'B ne voit pas les passages de A');
+select throws_ok(
+  $$insert into public.piece_passages (user_id, user_repertoire_id, position, label)
+    values ('00000000-0000-0000-0000-00000000000b', '30000000-0000-0000-0000-000000000001', 2, 'intrus')$$,
+  '23503', null, 'B ne peut pas rattacher un passage au morceau de A');
 update public.practice_logs set bpm = 200;
+update public.piece_passages set label = 'modifié par B';
 delete from public.practice_sessions;
 reset role;
 select is((select bpm::int from public.practice_logs where user_id = '00000000-0000-0000-0000-00000000000a'), 72, 'B n''a pas pu modifier le résultat de A');
 select is((select count(*)::int from public.practice_sessions where user_id = '00000000-0000-0000-0000-00000000000a'), 1, 'B n''a pas pu supprimer la séance de A');
+select is((select label from public.piece_passages where id = '40000000-0000-0000-0000-000000000001'), 'Mesures 1–8', 'B n''a pas pu modifier le passage de A');
 
 -- ----- Anonyme : aucun accès -----
 set local role anon;

@@ -25,14 +25,14 @@ export type Database = {
           Tables: {
             "competencies": {
                   Row: {
-                    "description": string,"domain": string,"id": string,"level": number,"name": string,"position": number,"slug": string
+                    "description": string,"domain": string,"id": string,"level": number,"name": string,"objective": string,"position": number,"slug": string
                   }
                   ComputedFields: never
                   Insert: {
-                    "description"?: string,"domain": string,"id"?: string,"level": number,"name": string,"position": number,"slug": string
+                    "description"?: string,"domain": string,"id"?: string,"level": number,"name": string,"objective"?: string,"position": number,"slug": string
                   }
                   Update: {
-                    "description"?: string,"domain"?: string,"id"?: string,"level"?: number,"name"?: string,"position"?: number,"slug"?: string
+                    "description"?: string,"domain"?: string,"id"?: string,"level"?: number,"name"?: string,"objective"?: string,"position"?: number,"slug"?: string
                   }
                   Relationships: [
                     
@@ -65,14 +65,14 @@ isOneToOne: false
                   ]
                 },"exercises": {
                   Row: {
-                    "bpm_increment": number,"bpm_target": number | null,"domain": string,"estimated_minutes": number,"id": string,"instructions": string,"key_signature": string | null,"level": number,"objective": string,"slug": string,"source_type": string,"source_url": string | null,"title": string
+                    "bpm_increment": number,"bpm_target": number | null,"domain": string,"estimated_minutes": number,"id": string,"instructions": string,"key_mode": string | null,"key_signature": string | null,"level": number,"objective": string,"slug": string,"source_type": string,"source_url": string | null,"title": string
                   }
                   ComputedFields: never
                   Insert: {
-                    "bpm_increment"?: number,"bpm_target"?: number | null,"domain": string,"estimated_minutes": number,"id"?: string,"instructions": string,"key_signature"?: string | null,"level": number,"objective": string,"slug": string,"source_type": string,"source_url"?: string | null,"title": string
+                    "bpm_increment"?: number,"bpm_target"?: number | null,"domain": string,"estimated_minutes": number,"id"?: string,"instructions": string,"key_mode"?: string | null,"key_signature"?: string | null,"level": number,"objective": string,"slug": string,"source_type": string,"source_url"?: string | null,"title": string
                   }
                   Update: {
-                    "bpm_increment"?: number,"bpm_target"?: number | null,"domain"?: string,"estimated_minutes"?: number,"id"?: string,"instructions"?: string,"key_signature"?: string | null,"level"?: number,"objective"?: string,"slug"?: string,"source_type"?: string,"source_url"?: string | null,"title"?: string
+                    "bpm_increment"?: number,"bpm_target"?: number | null,"domain"?: string,"estimated_minutes"?: number,"id"?: string,"instructions"?: string,"key_mode"?: string | null,"key_signature"?: string | null,"level"?: number,"objective"?: string,"slug"?: string,"source_type"?: string,"source_url"?: string | null,"title"?: string
                   }
                   Relationships: [
                     
@@ -91,16 +91,36 @@ isOneToOne: false
                   Relationships: [
                     
                   ]
-                },"planned_tasks": {
+                },"piece_passages": {
                   Row: {
-                    "created_at": string,"domain": string,"exercise_id": string | null,"id": string,"is_user_modified": boolean,"plan_id": string,"planned_minutes": number,"position": number,"reason": string,"status": string,"target_bpm": number | null,"task_date": string,"user_id": string,"user_repertoire_id": string | null
+                    "created_at": string,"id": string,"label": string,"position": number,"target_bpm": number | null,"user_id": string,"user_repertoire_id": string
                   }
                   ComputedFields: never
                   Insert: {
-                    "created_at"?: string,"domain": string,"exercise_id"?: string | null,"id"?: string,"is_user_modified"?: boolean,"plan_id": string,"planned_minutes": number,"position": number,"reason": string,"status"?: string,"target_bpm"?: number | null,"task_date": string,"user_id": string,"user_repertoire_id"?: string | null
+                    "created_at"?: string,"id"?: string,"label": string,"position": number,"target_bpm"?: number | null,"user_id": string,"user_repertoire_id": string
                   }
                   Update: {
-                    "created_at"?: string,"domain"?: string,"exercise_id"?: string | null,"id"?: string,"is_user_modified"?: boolean,"plan_id"?: string,"planned_minutes"?: number,"position"?: number,"reason"?: string,"status"?: string,"target_bpm"?: number | null,"task_date"?: string,"user_id"?: string,"user_repertoire_id"?: string | null
+                    "created_at"?: string,"id"?: string,"label"?: string,"position"?: number,"target_bpm"?: number | null,"user_id"?: string,"user_repertoire_id"?: string
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "piece_passages_user_repertoire_id_user_id_fkey"
+      columns: ["user_repertoire_id","user_id"]
+isOneToOne: false
+      referencedRelation: "user_repertoire"
+      referencedColumns: ["id","user_id"]
+    }
+                  ]
+                },"planned_tasks": {
+                  Row: {
+                    "created_at": string,"domain": string,"exercise_id": string | null,"id": string,"is_user_modified": boolean,"key_signature": string | null,"passage_id": string | null,"plan_id": string,"planned_minutes": number,"position": number,"reason": string,"status": string,"target_bpm": number | null,"task_date": string,"user_id": string,"user_repertoire_id": string | null
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "created_at"?: string,"domain": string,"exercise_id"?: string | null,"id"?: string,"is_user_modified"?: boolean,"key_signature"?: string | null,"passage_id"?: string | null,"plan_id": string,"planned_minutes": number,"position": number,"reason": string,"status"?: string,"target_bpm"?: number | null,"task_date": string,"user_id": string,"user_repertoire_id"?: string | null
+                  }
+                  Update: {
+                    "created_at"?: string,"domain"?: string,"exercise_id"?: string | null,"id"?: string,"is_user_modified"?: boolean,"key_signature"?: string | null,"passage_id"?: string | null,"plan_id"?: string,"planned_minutes"?: number,"position"?: number,"reason"?: string,"status"?: string,"target_bpm"?: number | null,"task_date"?: string,"user_id"?: string,"user_repertoire_id"?: string | null
                   }
                   Relationships: [
                     {
@@ -109,6 +129,12 @@ isOneToOne: false
 isOneToOne: false
       referencedRelation: "exercises"
       referencedColumns: ["id"]
+    },{
+      foreignKeyName: "planned_tasks_passage_id_user_id_fkey"
+      columns: ["passage_id","user_id"]
+isOneToOne: false
+      referencedRelation: "piece_passages"
+      referencedColumns: ["id","user_id"]
     },{
       foreignKeyName: "planned_tasks_plan_id_user_id_fkey"
       columns: ["plan_id","user_id"]
@@ -125,14 +151,14 @@ isOneToOne: false
                   ]
                 },"practice_logs": {
                   Row: {
-                    "actual_minutes": number,"bpm": number | null,"domain": string,"exercise_id": string | null,"id": string,"planned_task_id": string | null,"practice_date": string,"practiced_at": string,"result": string,"session_id": string,"user_id": string,"user_repertoire_id": string | null
+                    "actual_minutes": number,"bpm": number | null,"domain": string,"exercise_id": string | null,"id": string,"key_signature": string | null,"passage_id": string | null,"planned_task_id": string | null,"practice_date": string,"practiced_at": string,"result": string,"session_id": string,"user_id": string,"user_repertoire_id": string | null
                   }
                   ComputedFields: never
                   Insert: {
-                    "actual_minutes": number,"bpm"?: number | null,"domain": string,"exercise_id"?: string | null,"id"?: string,"planned_task_id"?: string | null,"practice_date": string,"practiced_at"?: string,"result": string,"session_id": string,"user_id": string,"user_repertoire_id"?: string | null
+                    "actual_minutes": number,"bpm"?: number | null,"domain": string,"exercise_id"?: string | null,"id"?: string,"key_signature"?: string | null,"passage_id"?: string | null,"planned_task_id"?: string | null,"practice_date": string,"practiced_at"?: string,"result": string,"session_id": string,"user_id": string,"user_repertoire_id"?: string | null
                   }
                   Update: {
-                    "actual_minutes"?: number,"bpm"?: number | null,"domain"?: string,"exercise_id"?: string | null,"id"?: string,"planned_task_id"?: string | null,"practice_date"?: string,"practiced_at"?: string,"result"?: string,"session_id"?: string,"user_id"?: string,"user_repertoire_id"?: string | null
+                    "actual_minutes"?: number,"bpm"?: number | null,"domain"?: string,"exercise_id"?: string | null,"id"?: string,"key_signature"?: string | null,"passage_id"?: string | null,"planned_task_id"?: string | null,"practice_date"?: string,"practiced_at"?: string,"result"?: string,"session_id"?: string,"user_id"?: string,"user_repertoire_id"?: string | null
                   }
                   Relationships: [
                     {
@@ -141,6 +167,12 @@ isOneToOne: false
 isOneToOne: false
       referencedRelation: "exercises"
       referencedColumns: ["id"]
+    },{
+      foreignKeyName: "practice_logs_passage_id_user_id_fkey"
+      columns: ["passage_id","user_id"]
+isOneToOne: false
+      referencedRelation: "piece_passages"
+      referencedColumns: ["id","user_id"]
     },{
       foreignKeyName: "practice_logs_planned_task_id_fkey"
       columns: ["planned_task_id"]
