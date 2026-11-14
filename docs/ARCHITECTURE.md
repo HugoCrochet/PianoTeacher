@@ -15,6 +15,7 @@ Source de vérité technique : stack, organisation du code, données, sécurité
 | Hébergement | Vercel Hobby + Supabase Free |
 
 - Versions stables au moment du bootstrap, verrouillées par `pnpm-lock.yaml`. Pas d'API expérimentale sans ADR.
+- Lecture des partitions : `pdfjs-dist` (Mozilla, Apache-2.0, chargé seulement sur la page de lecture). Le PDF est téléchargé en entier depuis une URL signée de 5 minutes (pas de requêtes partielles après expiration) ; pages dessinées à la demande, mémoire libérée hors écran, taille de canvas plafonnée pour Safari iPad.
 - Graphiques : SVG/HTML rendus côté serveur avec les tokens de la maquette (pas de bibliothèque de graphiques, pas de JavaScript client). Équivalent texte obligatoire.
 - À n'ajouter que le jour où un écran en a besoin : `react-hook-form` (formulaires complexes).
 - Interdit sans ADR : Prisma/ORM, second backend, analytics, télémétrie, API d'IA, service payant.

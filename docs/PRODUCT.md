@@ -65,7 +65,9 @@ Catalogue filtrable par domaine, niveau, tonalité et durée. Fiche : titre, dom
   - *Suggestions* curées (ajoutées « En cours »).
   - *Saisie libre* : seul le titre est obligatoire.
 - Champs : titre, compositeur, genre, difficulté estimée, lien, notes ; à l'ajout, « pour plus tard » ou « dès maintenant ».
-- **Fiche d'un morceau** : statut modifiable d'un geste en haut ; « Ouvrir la partition » comme action principale ; remplacer ou supprimer la partition, modifier la fiche et supprimer le morceau sont repliés, et toute suppression demande une confirmation. Sans partition : bouton « Trouver la partition sur IMSLP » puis import du PDF (jamais de téléchargement automatique).
+- **Affichage** : difficulté en 5 barres croissantes (texte équivalent pour les lecteurs d'écran) ; pastille verte « Partition » quand un PDF est disponible.
+- **Fiche d'un morceau** : statut modifiable d'un geste en haut ; « Ouvrir la partition » comme action principale ; en bas, repliés et dans cet ordre : modifier la fiche, remplacer ou supprimer la partition, supprimer le morceau ; toute suppression demande une confirmation.
+- **Lecture de la partition dans l'app** : toutes les pages à la suite, ajustées à la largeur, zoom de 75 à 200 %, écran maintenu allumé ; lien « Ouvrir dans un nouvel onglet » pour imprimer ou en cas de souci. Sans partition : bouton « Trouver la partition sur IMSLP » puis import du PDF (jamais de téléchargement automatique).
 - **Passages** : un morceau peut être découpé en passages (« découper par mesures » : 20 mesures par 8 → 1–8, 9–16, 17–20, ou ajout à la main), chacun avec un tempo visé optionnel. Statut d'après les résultats : `Pas encore travaillé`, `En travail`, `Solide` (au moins 3 réussites dont les 2 dernières). Affichage : dernier BPM « 54 sur 60 visés ». Supprimer un passage garde l'historique.
 - Seuls les morceaux « En cours » entrent dans le programme. Viser 1–2 pièces en cours (rappel indicatif au-delà de 3, jamais une limite).
 
