@@ -54,6 +54,47 @@ Ordre d'implémentation :
 
 > État au 13 novembre 2026 : cases cochées = vérifié par les tests automatiques (unitaires, RLS, navigateur) sur Supabase local, et déploiement en ligne sur https://piano-coach-olive.vercel.app. Restent à faire par l'utilisateur : essai sur un vrai iPad et un second appareil ; la CI tournera au premier push sur GitHub.
 
+## Étape 3 — Au-delà du MVP
+
+Le comportement attendu de chaque fonctionnalité livrée est décrit dans [PRODUCT.md](PRODUCT.md). Ordre recommandé : phase A, puis B2 (passages), puis le reste.
+
+### Phase A — Au piano
+1. **Métronome** dans la séance, calé sur le BPM cible de la tâche, réglable −/+.
+2. **Minuteur par tâche** : compte à rebours sur la durée prévue, signal doux à la fin, durée réelle pré-remplie.
+3. **Écran toujours allumé** pendant la séance (Wake Lock).
+4. **Installable sur l'écran d'accueil** (PWA : icône, plein écran ; pas de mode hors ligne).
+5. **Mode pupitre** : texte et boutons agrandis, lisibles à 1 m.
+6. **Partition depuis la séance** : bouton « Ouvrir la partition » sur une tâche de répertoire.
+7. **Réactivité** : retour immédiat au clic, requêtes regroupées.
+
+**Fini quand**
+- [x] Le métronome démarre au BPM cible, se règle pendant qu'il joue et s'arrête quand on change de tâche.
+- [x] Le minuteur se lance, se met en pause, signale la fin du temps prévu sans bloquer, et pré-remplit la durée réelle (toujours modifiable).
+- [x] L'écran ne se met pas en veille pendant une séance (navigateurs compatibles) ; sans support, rien ne casse.
+- [x] Le mode pupitre s'active d'un bouton, est mémorisé sur l'appareil et reste utilisable à 390 px.
+- [ ] Testé sur le vrai iPad, piano à côté (son du métronome audible, écran allumé).
+- [ ] A4, A6, A7 livrés.
+
+### Phase B — Pédagogie visible
+1. **Les 12 tonalités** : cercle des quintes des gammes/arpèges travaillés ; le planner favorise les tonalités jamais jouées.
+2. **Pièces découpées en passages** (mesures 1–8, 9–16…) avec statut et BPM ; le planner cible le passage le plus fragile.
+3. **Consignes d'improvisation variées**, tirées de façon déterministe selon la date.
+4. **Fiches de compétence** : objectif concret, exercices liés, ce qui manque pour « Acquise ».
+
+### Phase C — Voir ses progrès
+1. Calendrier de pratique, temps par domaine sur 4 semaines, courbes BPM (`recharts`).
+2. Bilan de la semaine, au ton encourageant.
+3. Records et jalons (première pièce jouée en entier, tonalité couverte…).
+
+### Phase D — Fiabilité à coût nul
+1. Sauvegarde hebdomadaire automatique (GitHub Actions : dump SQL + PDF vers un dépôt privé).
+2. Restauration testée et documentée.
+3. Clôturer l'étape 1 : iPad réel + second appareil.
+
+### À trancher par ADR (contraire au hors-périmètre de PRODUCT §8)
+- Flashcards de lecture en clé de fa (exige un rendu de notes sur portée).
+- Mode hors ligne pour une séance sans réseau.
+
 ## Tests attendus
 
 | Type | Outil | Couvre |
