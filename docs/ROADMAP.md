@@ -89,7 +89,7 @@ Le comportement attendu de chaque fonctionnalité livrée est décrit dans [PROD
 - [x] Chaque tâche d'improvisation affiche une variante du jour déterministe (tonalité, grille, rythme, objectif).
 - [x] Chaque compétence a une fiche : objectif concret, ce qui manque pour « Acquise », exercices liés.
 - [x] RLS de la table des passages testée (propriétaire, autre utilisateur).
-- [ ] Migration appliquée au Supabase de production.
+- [x] Migration appliquée au Supabase de production (14 novembre 2026).
 
 ### Phase C — Voir ses progrès
 1. Calendrier de pratique, temps par domaine sur 4 semaines, courbes BPM (`recharts`).
