@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { Clock } from "lucide-react";
 import { SubmitButton } from "@/components/forms/action-form";
-import { BackLink, EmptyState, PageHead, Screen } from "@/components/layout/page";
+import { BackLink, EmptyState, List, PageHead, Row, Screen } from "@/components/layout/page";
 import { buttonVariants } from "@/components/ui/button";
 import { DOMAIN_LABEL } from "@/lib/domain/domains";
 import { SessionDesk } from "@/features/practice/session-desk";
@@ -73,6 +73,20 @@ export default async function SessionPage() {
             </p>
           ) : null}
           <p>{current.instructions}</p>
+          {current.improvisation ? (
+            <div aria-labelledby="variante-titre" role="group">
+              <p id="variante-titre" className="mt-5 text-[19px] font-bold">
+                Variante du jour
+                <span className="block text-[15px] font-normal text-ink-2">Garde la consigne, change ces paramètres.</span>
+              </p>
+              <List className="mt-3">
+                <Row main="Tonalité" meta={current.improvisation.key} />
+                <Row main="Grille" detail={current.improvisation.degrees} meta={current.improvisation.grid} />
+                <Row main="Rythme" detail={current.improvisation.rhythm} />
+                <Row main="Objectif" detail={current.improvisation.goal} />
+              </List>
+            </div>
+          ) : null}
           <p className="text-[15px] text-ink-2">
             {current.plannedMinutes} min
             {current.targetBpm ? ` · tempo visé : ${current.targetBpm} BPM` : ""}
