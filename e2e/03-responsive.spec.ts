@@ -1,7 +1,7 @@
 import { expect, test } from "@playwright/test";
 import { login } from "./helpers";
 
-const PAGES = ["/", "/aujourdhui", "/programme", "/exercices", "/repertoire", "/parcours", "/progression", "/parametres"];
+const PAGES = ["/", "/aujourdhui", "/programme", "/exercices", "/repertoire", "/parcours", "/parcours/lec-fa-portee", "/progression", "/parametres"];
 
 test("les écrans tiennent dans la largeur, sans défilement horizontal", async ({ page }, testInfo) => {
   await login(page);

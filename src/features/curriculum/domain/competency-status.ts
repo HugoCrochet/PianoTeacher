@@ -46,3 +46,50 @@ export function currentLevel(
     percent: Math.round((score / inLevel.length) * 100),
   };
 }
+
+/** Seuils de « Acquise » (mêmes règles que `competencyStatus`). */
+export const ACQUIRED_SUCCESSES = 5;
+export const ACQUIRED_DAYS = 3;
+export const ACQUIRED_STREAK = 3;
+
+export interface AcquisitionStep {
+  label: string;
+  current: number;
+  target: number;
+  done: boolean;
+}
+
+/** Ce qui reste à faire pour qu'une compétence devienne « Acquise », critère par critère. */
+export function acquisitionSteps(logs: readonly CompetencyLog[]): AcquisitionStep[] {
+  const successes = logs.filter((l) => l.result === "success");
+  const days = new Set(successes.map((l) => l.date)).size;
+  let streak = 0;
+  for (let i = logs.length - 1; i >= 0 && logs[i].result === "success"; i -= 1) streak += 1;
+  const step = (label: string, current: number, target: number): AcquisitionStep => ({
+    label,
+    current: Math.min(current, target),
+    target,
+    done: current >= target,
+  });
+  return [
+    step("Réussites au total", successes.length, ACQUIRED_SUCCESSES),
+    step("Jours différents avec une réussite", days, ACQUIRED_DAYS),
+    step("Réussites d’affilée, les plus récentes", streak, ACQUIRED_STREAK),
+  ];
+}
+
+/** Résumé en une phrase de ce qui manque (vide si la compétence est acquise). */
+export function acquisitionSummary(steps: readonly AcquisitionStep[]): string {
+  const [total, days, streak] = steps;
+  const parts: string[] = [];
+  if (!total.done) {
+    const n = total.target - total.current;
+    parts.push(`${n} réussite${n > 1 ? "s" : ""} de plus`);
+  }
+  if (!days.done) {
+    const n = days.target - days.current;
+    parts.push(`sur ${n} jour${n > 1 ? "s" : ""} de plus`);
+  }
+  if (!streak.done) parts.push(`dont les ${streak.target} dernières d’affilée`);
+  return parts.length === 0 ? "" : `Encore ${parts.join(", ")}.`;
+}

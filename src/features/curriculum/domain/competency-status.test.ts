@@ -1,5 +1,11 @@
 import { describe, expect, it } from "vitest";
-import { competencyStatus, currentLevel, type CompetencyLog } from "./competency-status";
+import {
+  acquisitionSteps,
+  acquisitionSummary,
+  competencyStatus,
+  currentLevel,
+  type CompetencyLog,
+} from "./competency-status";
 
 const ok = (date: string): CompetencyLog => ({ result: "success", date });
 const retry = (date: string): CompetencyLog => ({ result: "retry", date });
@@ -39,5 +45,37 @@ describe("currentLevel", () => {
 
   it("renvoie null sans compétence", () => {
     expect(currentLevel([])).toBeNull();
+  });
+});
+
+describe("acquisitionSteps", () => {
+  const log = (date: string, result: CompetencyLog["result"]): CompetencyLog => ({ date, result });
+
+  it("liste tout ce qui manque sans historique", () => {
+    const steps = acquisitionSteps([]);
+    expect(steps.every((s) => !s.done && s.current === 0)).toBe(true);
+    expect(acquisitionSummary(steps)).toBe("Encore 5 réussites de plus, sur 3 jours de plus, dont les 3 dernières d’affilée.");
+  });
+
+  it("est cohérent avec le statut « Acquise »", () => {
+    const logs = [
+      log("2026-11-01", "success"),
+      log("2026-11-02", "success"),
+      log("2026-11-02", "retry"),
+      log("2026-11-03", "success"),
+      log("2026-11-04", "success"),
+      log("2026-11-04", "success"),
+    ];
+    for (let n = 0; n <= logs.length; n += 1) {
+      const slice = logs.slice(0, n);
+      const allDone = acquisitionSteps(slice).every((s) => s.done);
+      expect(allDone).toBe(competencyStatus(slice) === "acquired");
+    }
+    expect(acquisitionSummary(acquisitionSteps(logs))).toBe("");
+  });
+
+  it("compte la série en cours depuis le dernier résultat", () => {
+    const steps = acquisitionSteps([log("1", "success"), log("2", "retry"), log("3", "success")]);
+    expect(steps[2]).toMatchObject({ current: 1, target: 3, done: false });
   });
 });
