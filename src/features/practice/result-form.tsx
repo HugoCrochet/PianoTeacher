@@ -5,25 +5,31 @@ import type { ActionState } from "@/lib/action";
 import type { PracticeResult } from "@/lib/domain/domains";
 import { Button } from "@/components/ui/button";
 import { FormMessage, Input, Label } from "@/components/ui/field";
+import { measuredMinutes } from "./domain/session-tools";
 import { recordResult } from "./server/actions";
 
 /**
  * Saisie du résultat d'une tâche. Le choix « Réussi » / « À retravailler » reste
- * modifiable tant que « Valider » n'est pas pressé.
+ * modifiable tant que « Valider » n'est pas pressé. La durée réelle reprend le temps
+ * du minuteur tant que l'utilisateur ne l'a pas saisie lui-même.
  */
 export function ResultForm({
   taskId,
   plannedMinutes,
   targetBpm,
   showBpm,
+  measuredSeconds = 0,
 }: {
   taskId: string;
   plannedMinutes: number;
   targetBpm: number | null;
   showBpm: boolean;
+  measuredSeconds?: number;
 }) {
   const [state, action, pending] = useActionState<ActionState, FormData>(recordResult, null);
   const [result, setResult] = useState<PracticeResult | null>(null);
+  const [typedMinutes, setTypedMinutes] = useState<string | null>(null);
+  const minutes = typedMinutes ?? String(measuredSeconds > 0 ? measuredMinutes(measuredSeconds) : plannedMinutes);
 
   return (
     <form action={action} className="mt-7 max-w-[760px]">
@@ -73,7 +79,8 @@ export function ResultForm({
             inputMode="numeric"
             min={1}
             max={180}
-            defaultValue={plannedMinutes}
+            value={minutes}
+            onChange={(e) => setTypedMinutes(e.target.value)}
             required
           />
         </div>

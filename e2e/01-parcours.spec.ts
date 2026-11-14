@@ -46,6 +46,39 @@ test("connexion → séance → résultat + BPM → historique, puis déconnexio
   await validate.click();
   await expect(page.getByText(`tâche 2 sur ${taskCount}`)).toBeVisible();
 
+  // Outils de séance : minuteur (horloge simulée), métronome, mode pupitre.
+  await page.clock.install();
+  await page.reload();
+  await expect(page.getByRole("timer")).toBeVisible();
+  const startTimer = page.getByRole("button", { name: "Démarrer" });
+  await expect(async () => {
+    await startTimer.click({ timeout: 500 });
+    await expect(page.getByText("En cours")).toBeVisible({ timeout: 500 });
+  }).toPass();
+  await page.clock.fastForward("03:00");
+  await expect(page.getByLabel("Durée réelle (min)")).toHaveValue("3");
+  await page.getByRole("button", { name: "Pause" }).click();
+  await expect(page.getByText("En pause")).toBeVisible();
+  await page.getByRole("button", { name: "Remettre à zéro" }).click();
+
+  const bpmValue = page.getByRole("listitem").filter({ hasText: "Métronome" });
+  const before = Number((await bpmValue.locator(".tabular-nums").innerText()).replace(/\D/g, ""));
+  await page.getByRole("button", { name: /Accélérer de 2 BPM/ }).click();
+  await expect(bpmValue.locator(".tabular-nums")).toContainText(String(before + 2));
+  const play = page.getByRole("button", { name: /Lancer|Arrêter/ });
+  await play.click();
+  await expect(play).toHaveAttribute("aria-pressed", "true");
+  await play.click();
+  await expect(play).toHaveAttribute("aria-pressed", "false");
+
+  const pupitre = page.getByRole("button", { name: "Mode pupitre" });
+  await pupitre.click();
+  await expect(pupitre).toHaveAttribute("aria-pressed", "true");
+  await page.reload();
+  await expect(page.getByRole("button", { name: "Mode pupitre" })).toHaveAttribute("aria-pressed", "true");
+  await page.getByRole("button", { name: "Mode pupitre" }).click();
+  await expect(page.getByRole("button", { name: "Mode pupitre" })).toHaveAttribute("aria-pressed", "false");
+
   await choose(page, "À retravailler");
   await page.getByLabel("Durée réelle (min)").fill("5");
   await validate.click();

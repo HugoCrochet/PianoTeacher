@@ -47,6 +47,11 @@ Salutation, durée de la séance du jour, série de jours (affichage désactivab
 ### Séance du jour et programme
 - Séance du jour : liste ordonnée de tâches (domaine, intitulé, durée, BPM cible, raison).
 - Séance : une tâche à la fois, progression x/y, consigne et objectif. Actions principales `Réussi` et `À retravailler`, BPM atteint optionnel ; `Passer` et `Terminer la séance` en secondaire. Le résultat se corrige avant de passer à la suite ; aucun commentaire obligatoire. On peut interrompre et reprendre la séance.
+- Outils de séance :
+  - **Minuteur** : compte à rebours sur la durée prévue de la tâche (démarrer / pause / remise à zéro). À la fin, un signal sonore doux et la mention « Temps prévu écoulé » ; le temps continue de compter, rien n'est bloqué. La durée réelle est pré-remplie avec le temps mesuré, arrondi à la minute (minimum 1), et reste modifiable.
+  - **Métronome** : démarre au BPM cible de la tâche (60 par défaut), réglable de 30 à 240, y compris pendant qu'il joue. Il s'arrête quand on passe à la tâche suivante.
+  - **Écran allumé** : l'écran ne se met pas en veille tant qu'une séance est affichée (si le navigateur le permet).
+  - **Mode pupitre** : agrandit texte et boutons pour lire à distance ; réglage mémorisé sur l'appareil.
 - Programme de la semaine (lundi → dimanche), ouvert depuis Aujourd'hui (« Voir la semaine ») : voir, remplacer, déplacer ou supprimer une tâche. « Régénérer » prévient si des modifications manuelles existent.
 
 ### Exercices
