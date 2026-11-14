@@ -40,7 +40,8 @@ function subscribe(listener: () => void): () => void {
 
 /* ---------- Écran allumé ---------- */
 
-function useScreenWakeLock(): void {
+/** Garde l'écran allumé tant que le composant est affiché (si le navigateur le permet). */
+export function useScreenWakeLock(): void {
   useEffect(() => {
     if (!("wakeLock" in navigator)) return;
     let sentinel: WakeLockSentinel | null = null;

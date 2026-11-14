@@ -21,3 +21,26 @@ export async function removeScore(supabase: ServerClient, assetId: string): Prom
   const deleted = await supabase.from("pdf_assets").delete().eq("id", assetId);
   return !deleted.error;
 }
+
+/** Durée de validité d'une URL signée de partition (secondes). */
+export const SIGNED_URL_SECONDS = 300;
+
+/**
+ * URL signée de courte durée vers la partition d'un morceau, ou null si le morceau n'a pas
+ * de partition (la RLS limite la lecture aux morceaux de l'utilisateur connecté).
+ */
+export async function signedScoreUrl(
+  supabase: ServerClient,
+  pieceId: string,
+): Promise<{ url: string; filename: string } | null | "error"> {
+  const piece = await supabase
+    .from("user_repertoire")
+    .select("pdf:pdf_assets ( storage_path, original_filename )")
+    .eq("id", pieceId)
+    .maybeSingle();
+  const pdf = piece.data?.pdf;
+  if (!pdf) return null;
+  const signed = await supabase.storage.from(SCORES_BUCKET).createSignedUrl(pdf.storage_path, SIGNED_URL_SECONDS);
+  if (signed.error || !signed.data) return "error";
+  return { url: signed.data.signedUrl, filename: pdf.original_filename };
+}
