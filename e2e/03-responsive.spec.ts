@@ -1,7 +1,7 @@
 import { expect, test } from "@playwright/test";
 import { login } from "./helpers";
 
-const PAGES = ["/", "/aujourdhui", "/programme", "/exercices", "/repertoire", "/parcours", "/parcours/lec-fa-portee", "/improvisation", "/progression", "/parametres"];
+const PAGES = ["/", "/aujourdhui", "/programme", "/exercices", "/repertoire", "/repertoire/nouveau", "/repertoire/nouveau?mode=suggestions", "/repertoire/nouveau?mode=fiche", "/parcours", "/parcours/lec-fa-portee", "/improvisation", "/progression", "/parametres"];
 
 test("les écrans tiennent dans la largeur, sans défilement horizontal", async ({ page }, testInfo) => {
   await login(page);
@@ -13,7 +13,7 @@ test("les écrans tiennent dans la largeur, sans défilement horizontal", async 
     );
     expect(overflow, `défilement horizontal sur ${path}`).toBeLessThanOrEqual(1);
     await page.screenshot({
-      path: `test-results/ecrans/${testInfo.project.name}${path === "/" ? "-accueil" : path.replace(/\//g, "-")}.png`,
+      path: `test-results/ecrans/${testInfo.project.name}${path === "/" ? "-accueil" : path.replace(/[^a-z0-9]+/gi, "-")}.png`,
       fullPage: true,
       animations: "disabled",
     });

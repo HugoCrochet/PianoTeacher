@@ -1,6 +1,6 @@
 import { z } from "zod";
 import { EXERCISE_DOMAINS } from "@/lib/domain/domains";
-import { PERIODS } from "@/features/repertoire/domain/catalog-search";
+import { GENRES } from "@/features/repertoire/domain/catalog-search";
 import { isIsoDate } from "@/lib/dates";
 
 /** Champ de formulaire vide → undefined. */
@@ -35,9 +35,7 @@ export const regenerateSchema = z.object({
 const pieceFields = {
   title: text(200).min(1, "Le titre est requis."),
   composer: text(120).default(""),
-  style: z.enum(["classical", "film", "other"]),
-  period: z.preprocess(emptyToUndefined, z.enum(PERIODS, "Courant inconnu.").optional()),
-  status: z.enum(["to_discover", "active", "paused", "completed"]),
+  genre: z.enum(GENRES, "Genre inconnu."),
   level: optionalInt(1, 5),
   currentStep: text(200).default(""),
   notes: text(4000).default(""),
@@ -46,8 +44,10 @@ const pieceFields = {
     z.url("Lien invalide.").max(500).refine((u) => /^https?:\/\//.test(u), "Le lien doit commencer par http(s)://").optional(),
   ),
 };
-export const pieceSchema = z.object(pieceFields);
+const pieceStatus = z.enum(["to_discover", "active", "paused", "completed"], "Statut inconnu.");
+export const pieceSchema = z.object({ ...pieceFields, status: pieceStatus });
 export const pieceUpdateSchema = z.object({ id: z.uuid(), ...pieceFields });
+export const pieceStatusSchema = z.object({ id: z.uuid(), status: pieceStatus });
 export const idSchema = z.object({ id: z.uuid() });
 
 export const MAX_PASSAGES = 50;

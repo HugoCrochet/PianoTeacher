@@ -22,27 +22,29 @@ test("parcours : cercle des tonalités et fiche de compétence", async ({ page }
 
 test("répertoire : découper un morceau en passages", async ({ page }) => {
   await login(page);
-  await page.goto("/repertoire?onglet=suggestions");
-  await page.getByRole("button", { name: "Ajouter à mes morceaux" }).nth(1).click();
+  await page.goto("/repertoire/nouveau?mode=suggestions");
+  await page.getByRole("button", { name: /^Ajouter / }).nth(1).click();
   await expect(page).toHaveURL(/\/repertoire\/[0-9a-f-]{36}(\?nouveau=1)?(#partition)?$/);
   await expect(page.getByRole("heading", { name: "Passages" })).toBeVisible();
 
   await page.getByLabel("Nombre de mesures du morceau").fill("20");
   await page.getByLabel("Mesures par passage").fill("8");
   await page.getByRole("button", { name: "Découper" }).click();
-  await expect(page.getByText("3 passages ajoutés.")).toBeVisible();
   for (const label of ["Mesures 1–8", "Mesures 9–16", "Mesures 17–20"]) {
     await expect(page.getByRole("listitem").filter({ hasText: label })).toContainText("Pas encore travaillé");
   }
 
+  await page.getByText("Ajouter un passage à la main").click();
   await page.getByLabel("Nom du passage").fill("Coda");
   await page.getByLabel("Tempo visé (optionnel)").fill("60");
-  await page.getByRole("button", { name: "Ajouter", exact: true }).click();
-  await expect(page.getByRole("listitem").filter({ hasText: "Coda" })).toContainText("60 BPM visés");
+  await page.getByRole("button", { name: "Ajouter le passage" }).click();
+  await expect(page.getByText("Passage ajouté.")).toBeVisible();
+  await expect(page.getByRole("listitem").filter({ hasText: "60 BPM visés" })).toContainText("Coda");
 
+  await page.getByText("Supprimer un passage").click();
   await page.getByRole("button", { name: "Supprimer le passage Coda" }).click();
-  await expect(page.getByRole("listitem").filter({ hasText: "Coda" })).toHaveCount(0);
-  await expect(page.getByRole("listitem").filter({ hasText: "Mesures 1–8" })).toBeVisible();
+  await expect(page.getByText("60 BPM visés")).toHaveCount(0);
+  await expect(page.getByRole("listitem").filter({ hasText: "Mesures 1–8" }).first()).toBeVisible();
 });
 
 test("improvisation : tirage d'une tonalité et d'une progression", async ({ page }) => {
@@ -75,49 +77,70 @@ test("improvisation : tirage d'une tonalité et d'une progression", async ({ pag
   expect(four.split("|")).toHaveLength(4);
 });
 
-test("répertoire : ajout pré-rempli (recherche d'œuvre), partition IMSLP, filtre par courant", async ({ page }) => {
+test("répertoire : ajout pré-rempli, statut en un geste, liste filtrable", async ({ page }) => {
   await login(page);
   await page.goto("/repertoire/nouveau");
-  await expect(page.getByLabel("Chercher une œuvre (compositeur ou titre)")).toBeVisible();
+  await expect(page.getByLabel("Compositeur ou titre")).toBeVisible();
   await expect(page.getByText("Open Opus")).toBeVisible();
-  // Champs retirés de la fiche.
+  // Saisie libre : la fiche est seule à l'écran, sans champs superflus.
+  await page.getByRole("link", { name: "Saisie libre" }).click();
+  await expect(page.getByLabel("Titre", { exact: true })).toBeVisible();
   await expect(page.getByLabel(/Difficulté ressentie/)).toHaveCount(0);
   await expect(page.getByLabel(/Pour toi, c’est une pièce/)).toHaveCount(0);
+  await expect(page.getByLabel("Courant")).toHaveCount(0);
 
-  // Retour de « Choisir » (sans appel réseau) : la fiche est pré-remplie.
+  // Retour de « Choisir » (sans appel réseau) : la fiche pré-remplie est en haut de page.
   const search = "https://imslp.org/wiki/Special:Search?search=Chopin%20Waltz%20in%20A%20minor%2C%20B.150";
   const prefill = new URLSearchParams({
     titre: "Valse en la mineur, B.150",
     compositeur: "Frédéric Chopin",
-    courant: "romantic",
+    genre: "romantic",
     partition: search,
+    q: "chopin valse",
   });
-  await page.goto(`/repertoire/nouveau?${prefill.toString()}#formulaire`);
-  await expect(page.getByRole("heading", { name: "Vérifie la fiche" })).toBeVisible();
+  await page.goto(`/repertoire/nouveau?${prefill.toString()}`);
+  await expect(page.getByRole("link", { name: "Choisir une autre œuvre" })).toHaveAttribute("href", /q=chopin/);
   await expect(page.getByLabel("Titre", { exact: true })).toHaveValue("Valse en la mineur, B.150");
+  await expect(page.getByLabel("Titre", { exact: true })).toBeInViewport();
   await expect(page.getByLabel("Compositeur", { exact: true })).toHaveValue("Frédéric Chopin");
-  await expect(page.getByLabel("Courant")).toHaveValue("romantic");
-  await expect(page.getByLabel("Lien de référence")).toHaveValue(search);
+  await expect(page.getByLabel("Genre")).toHaveValue("romantic");
+  await expect(page.getByLabel(/^Lien/)).toHaveValue(search);
 
   // Un lien de partition étranger à IMSLP n'est pas pré-rempli.
   await page.goto(`/repertoire/nouveau?titre=Test&partition=${encodeURIComponent("https://exemple.com/x.pdf")}`);
-  await expect(page.getByLabel("Lien de référence")).toHaveValue("");
+  await expect(page.getByLabel(/^Lien/)).toHaveValue("");
 
-  // Ajout : la fiche s'ouvre sur la partition, avec la recherche IMSLP.
-  await page.goto(`/repertoire/nouveau?${prefill.toString()}#formulaire`);
-  await page.getByRole("button", { name: "Ajouter", exact: true }).click();
+  // Ajout « pour plus tard » : la fiche s'ouvre sur la partition, avec la recherche IMSLP.
+  await page.goto(`/repertoire/nouveau?${prefill.toString()}`);
+  await page.getByRole("button", { name: "Ajouter le morceau" }).click();
   await expect(page).toHaveURL(/\/repertoire\/[0-9a-f-]{36}\?nouveau=1#partition$/);
   await expect(page.getByText("Morceau ajouté")).toBeVisible();
   await expect(page.getByRole("link", { name: "Trouver la partition sur IMSLP" })).toHaveAttribute("href", search);
   await expect(page.getByRole("heading", { level: 1 })).toHaveText("Valse en la mineur, B.150");
-  await expect(page.getByText(/Frédéric Chopin · Romantique · En cours/)).toBeVisible();
+  await expect(page.getByText("Frédéric Chopin · Romantique")).toBeVisible();
+  await expect(page.getByRole("button", { name: /À découvrir/ })).toHaveAttribute("aria-pressed", "true");
+  // Les actions rares sont repliées.
+  await expect(page.getByRole("button", { name: "Supprimer définitivement" })).toBeHidden();
 
-  // Filtre par courant dans le répertoire (dès que deux courants sont présents).
-  await page.goto("/repertoire");
-  const filters = page.getByRole("navigation", { name: "Filtrer par courant" });
-  if (await filters.count()) {
-    await filters.getByRole("link", { name: "Romantique" }).click();
-    await expect(page).toHaveURL(/courant=romantic/);
-    await expect(page.getByRole("link", { name: "Valse en la mineur, B.150" })).toBeVisible();
-  }
+  // Liste : onglet « À découvrir », recherche sans accents, puis « Commencer » en un geste.
+  await page.goto("/repertoire?onglet=a-decouvrir");
+  const row = page.getByRole("listitem").filter({ hasText: "Valse en la mineur, B.150" });
+  await expect(row).toContainText("Frédéric Chopin · Romantique");
+  await page.goto("/repertoire?onglet=a-decouvrir&q=VALSE+chopin");
+  await expect(row).toBeVisible();
+  await page.goto("/repertoire?onglet=a-decouvrir&q=mozart");
+  await expect(page.getByText("Aucun morceau ne correspond")).toBeVisible();
+  await page.goto("/repertoire?onglet=a-decouvrir");
+  await page.getByRole("button", { name: "Commencer Valse en la mineur, B.150" }).click();
+  await expect(row).toHaveCount(0);
+  await page.getByRole("link", { name: /^En cours/ }).click();
+  await expect(row).toBeVisible();
+
+  // Fiche : le statut se change d'un geste.
+  await row.getByRole("link", { name: "Valse en la mineur, B.150" }).click();
+  await expect(page.getByRole("button", { name: /En cours/ })).toHaveAttribute("aria-pressed", "true");
+  await page.getByRole("button", { name: "En pause" }).click();
+  await expect(page.getByRole("button", { name: /En pause/ })).toHaveAttribute("aria-pressed", "true");
+  await page.goto("/repertoire?onglet=en-pause");
+  await expect(row).toBeVisible();
 });

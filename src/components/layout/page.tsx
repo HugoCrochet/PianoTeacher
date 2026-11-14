@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { ChevronLeft, type LucideIcon } from "lucide-react";
+import { ChevronDown, ChevronLeft, type LucideIcon } from "lucide-react";
 import type { ReactNode } from "react";
 import { cn } from "@/lib/utils";
 
@@ -125,4 +125,35 @@ export function Panel({ label, title, children }: { label?: string; title: strin
 
 export function EmptyState({ title, children }: { title: string; children?: ReactNode }) {
   return <Panel title={title}>{children}</Panel>;
+}
+
+/**
+ * Bloc repliable, au style d'une ligne de liste : range les actions secondaires
+ * (modifier, remplacer, supprimer) sans les mettre à côté des actions principales.
+ */
+export function Disclosure({
+  summary,
+  children,
+  defaultOpen = false,
+  id,
+}: {
+  summary: ReactNode;
+  children: ReactNode;
+  defaultOpen?: boolean;
+  id?: string;
+}) {
+  return (
+    <details id={id} open={defaultOpen} className="group max-w-[760px] border-b-[1.5px] border-line">
+      <summary className="flex min-h-11 cursor-pointer list-none items-center justify-between gap-3 px-1 py-[18px] text-lg [&::-webkit-details-marker]:hidden">
+        <span>{summary}</span>
+        <ChevronDown
+          size={20}
+          strokeWidth={1.8}
+          aria-hidden
+          className="flex-none text-ink-2 transition-transform group-open:rotate-180 motion-reduce:transition-none"
+        />
+      </summary>
+      <div className="px-1 pt-1 pb-7">{children}</div>
+    </details>
+  );
 }

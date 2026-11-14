@@ -9,8 +9,12 @@ test.describe.configure({ mode: "serial" });
 
 test("répertoire : suggestion, partition PDF privée, suppression", async ({ page, browser }) => {
   await login(page);
-  await page.goto("/repertoire?onglet=suggestions");
-  await page.getByRole("button", { name: "Ajouter à mes morceaux" }).first().click();
+  // L'ajout est accessible en haut de la liste, sans faire défiler.
+  await page.goto("/repertoire");
+  await page.getByRole("link", { name: "Ajouter un morceau" }).click();
+  await page.getByRole("link", { name: "Suggestions" }).click();
+  await expect(page).toHaveURL(/mode=suggestions/);
+  await page.getByRole("button", { name: /^Ajouter / }).first().click();
   await expect(page).toHaveURL(/\/repertoire\/[0-9a-f-]{36}(\?nouveau=1)?(#partition)?$/);
   await expect(page.getByRole("heading", { name: "Partition" })).toBeVisible();
 
@@ -22,8 +26,8 @@ test("répertoire : suggestion, partition PDF privée, suppression", async ({ pa
 
   await input.setInputFiles({ name: "ma-partition.pdf", mimeType: "application/pdf", buffer: PDF });
   await page.getByRole("button", { name: "Envoyer" }).click();
-  await expect(page.getByText("Partition enregistrée.")).toBeVisible();
-  await expect(page.getByText("ma-partition.pdf")).toBeVisible();
+  await expect(page.getByRole("link", { name: "Ouvrir la partition" })).toBeVisible();
+  await expect(page.getByText(/ma-partition\.pdf/)).toBeVisible();
 
   // Lecture par URL signée pour le propriétaire…
   const href = await page.getByRole("link", { name: "Ouvrir la partition" }).getAttribute("href");
@@ -37,6 +41,13 @@ test("répertoire : suggestion, partition PDF privée, suppression", async ({ pa
   expect(refused.headers()["location"]).toContain("/connexion");
   await anonymous.close();
 
+  // La suppression est rangée à part et demande une confirmation.
+  await expect(page.getByRole("button", { name: "Supprimer la partition" })).toBeHidden();
+  await page.getByText("Remplacer ou supprimer la partition").click();
+  await page.getByRole("button", { name: "Supprimer la partition" }).click();
+  await expect(page.getByText("Coche la case pour confirmer la suppression de la partition.")).toBeVisible();
+  await expect(page.getByRole("link", { name: "Ouvrir la partition" })).toBeVisible();
+  await page.getByLabel(/le fichier PDF sera supprimé/).check();
   await page.getByRole("button", { name: "Supprimer la partition" }).click();
   await expect(page.getByRole("link", { name: "Ouvrir la partition" })).toHaveCount(0);
 

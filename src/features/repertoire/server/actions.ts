@@ -12,11 +12,13 @@ import {
   PDF_MAX_BYTES,
   pdfRegisterSchema,
   pieceSchema,
+  pieceStatusSchema,
   pieceUpdateSchema,
   splitPassagesSchema,
 } from "@/lib/validation/schemas";
 import { regenerateWeek } from "@/features/planner/server/plan-service";
 import { getContext, type AppContext } from "@/features/profile/server/profile";
+import { genreColumns } from "../domain/catalog-search";
 import { splitMeasures } from "../domain/passages";
 import { removeScore, scorePath, SCORES_BUCKET } from "./pdf";
 
@@ -40,8 +42,7 @@ export async function createPiece(_prev: ActionState, formData: FormData): Promi
       user_id: ctx.user.id,
       title: p.title,
       composer: p.composer,
-      style: p.style,
-      period: p.period ?? null,
+      ...genreColumns(p.genre),
       status: p.status,
       level: p.level ?? null,
       current_step: p.currentStep,
@@ -98,9 +99,7 @@ export async function updatePiece(_prev: ActionState, formData: FormData): Promi
     .update({
       title: p.title,
       composer: p.composer,
-      style: p.style,
-      period: p.period ?? null,
-      status: p.status,
+      ...genreColumns(p.genre),
       level: p.level ?? null,
       current_step: p.currentStep,
       notes: p.notes,
@@ -114,6 +113,23 @@ export async function updatePiece(_prev: ActionState, formData: FormData): Promi
   await replan(ctx);
   revalidatePath("/", "layout");
   return done("Morceau enregistré.");
+}
+
+/** Changement de statut en un geste (liste et fiche). Le programme à venir est réajusté. */
+export async function setPieceStatus(formData: FormData): Promise<void> {
+  const parsed = pieceStatusSchema.safeParse(Object.fromEntries(formData));
+  if (!parsed.success) return;
+  const ctx = await getContext();
+  const updated = await ctx.supabase
+    .from("user_repertoire")
+    .update({ status: parsed.data.status, updated_at: new Date().toISOString() })
+    .eq("id", parsed.data.id)
+    .neq("status", parsed.data.status)
+    .select("id")
+    .maybeSingle();
+  if (updated.error || !updated.data) return;
+  await replan(ctx);
+  revalidatePath("/", "layout");
 }
 
 export async function deletePiece(_prev: ActionState, formData: FormData): Promise<ActionState> {
@@ -185,6 +201,7 @@ export async function registerPdf(_prev: ActionState, formData: FormData): Promi
 export async function deletePdf(_prev: ActionState, formData: FormData): Promise<ActionState> {
   const parsed = idSchema.safeParse(Object.fromEntries(formData));
   if (!parsed.success) return fail();
+  if (formData.get("confirm") !== "on") return fail("Coche la case pour confirmer la suppression de la partition.");
   const { supabase } = await getContext();
   const piece = await supabase.from("user_repertoire").select("pdf_asset_id").eq("id", parsed.data.id).maybeSingle();
   if (!piece.data?.pdf_asset_id) return done("Aucune partition à supprimer.");
