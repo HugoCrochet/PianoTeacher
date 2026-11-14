@@ -1,5 +1,13 @@
 import "server-only";
-import { effectiveKey, keyCoverage, type KeyCoverage, type KeyLog } from "@/lib/domain/keys";
+import {
+  ALL_KEYS,
+  effectiveKey,
+  keyCoverage,
+  keyStatus,
+  type KeyCoverage,
+  type KeyLog,
+  type KeyStatus,
+} from "@/lib/domain/keys";
 import type { ServerClient } from "@/lib/supabase/server";
 
 /** Couverture des 24 tonalités d'après les résultats réels en gammes et harmonie. */
@@ -15,4 +23,10 @@ export async function loadKeyCoverage(supabase: ServerClient): Promise<Map<strin
     return key ? [{ key, date: l.practice_date, result: l.result as KeyLog["result"] }] : [];
   });
   return keyCoverage(logs);
+}
+
+/** Statut de chacune des 24 tonalités (orthographe du cercle), sérialisable pour un composant client. */
+export async function loadKeyStatuses(supabase: ServerClient): Promise<Record<string, KeyStatus>> {
+  const coverage = await loadKeyCoverage(supabase);
+  return Object.fromEntries(ALL_KEYS.map((k) => [k, keyStatus(coverage.get(k))]));
 }

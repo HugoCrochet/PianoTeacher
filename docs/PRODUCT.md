@@ -77,6 +77,14 @@ Suite ordonnée de **compétences** par niveau (ex. « Niveau 2 — lecture en c
 ### Improvisation : variante du jour
 Chaque tâche d'improvisation affiche une variante : tonalité, grille (accords écrits dans la tonalité et degrés), contrainte rythmique et objectif. Tirage déterministe à partir de la date et de l'exercice (même jour → même variante), limité au niveau de l'exercice.
 
+### Improvisation : tirage au hasard
+Outil libre (page « Tirage d'improvisation », depuis Exercices, et bouton « Tirer une grille au hasard » sous la variante du jour en séance). Le hasard est réservé à cet outil : le planner reste déterministe.
+- Tire une tonalité (12 toniques × majeur/mineur, orthographe usuelle : Ré♭, Sol♭ majeur ; Do♯, Sol♯ mineur) et une progression de 3 ou 4 accords de la tonalité.
+- Progression : commence sur la tonique, jamais deux fois le même accord d'affilée, ne finit pas sur la tonique (pour boucler). Pas d'accord diminué ; en mineur, V est majeur (mineur harmonique).
+- Choix : mode (au hasard, majeur, mineur) et nombre d'accords (3, 4, au hasard).
+- **Tonalités** : par défaut, seulement celles **bien installées** (cercle du parcours, au moins 3 réussites) ; à défaut, celles déjà travaillées ; à défaut, do majeur et la mineur. La case « Essayer aussi d'autres tonalités » ouvre les 24. L'écran dit toujours sur quelle base le tirage est fait, et si la tonalité tirée est nouvelle.
+- Affiche la tonalité, les accords (noms et degrés) et les notes de la gamme. Rien n'est enregistré.
+
 ### Progression
 Temps de pratique par jour et par semaine, nombre de séances, historique des résultats, courbe BPM par exercice ou morceau, domaines travaillés, compétences en cours. Uniquement à partir des **logs réels**, jamais des tâches planifiées. Pas de score global, pas de mesure de précision ou de timing.
 - **Bilan de la semaine dernière** : jours et temps de pratique, domaines travaillés, hausses de tempo, nouvelles tonalités, réussites et tâches à retravailler. Toujours encourageant : la comparaison avec la semaine d'avant n'apparaît que si elle est en hausse ; une semaine vide devient « Une semaine de pause ».

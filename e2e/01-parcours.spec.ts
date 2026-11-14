@@ -52,8 +52,9 @@ test("connexion → séance → résultat + BPM → historique, puis déconnexio
   await expect(page.getByRole("timer")).toBeVisible();
   const startTimer = page.getByRole("button", { name: "Démarrer" });
   await expect(async () => {
-    await startTimer.click({ timeout: 500 });
-    await expect(page.getByText("En cours")).toBeVisible({ timeout: 500 });
+    // Réessaie tant que la page n'est pas hydratée, sans recliquer une fois le minuteur lancé.
+    if (await startTimer.isVisible()) await startTimer.click({ timeout: 1000 });
+    await expect(page.getByText("En cours")).toBeVisible({ timeout: 2000 });
   }).toPass();
   await page.clock.fastForward("03:00");
   await expect(page.getByLabel("Durée réelle (min)")).toHaveValue("3");

@@ -44,3 +44,33 @@ test("répertoire : découper un morceau en passages", async ({ page }) => {
   await expect(page.getByRole("listitem").filter({ hasText: "Coda" })).toHaveCount(0);
   await expect(page.getByRole("listitem").filter({ hasText: "Mesures 1–8" })).toBeVisible();
 });
+
+test("improvisation : tirage d'une tonalité et d'une progression", async ({ page }) => {
+  await login(page);
+  await page.goto("/exercices");
+  await page.getByRole("link", { name: "Tirage d’improvisation" }).click();
+  await expect(page).toHaveURL(/\/improvisation$/);
+
+  // Par défaut, le tirage reste dans les tonalités maîtrisées (ou travaillées, ou do/la pour commencer).
+  await expect(page.getByText(/^Tirage (parmi tes tonalités|parmi les tonalités que tu as déjà travaillées|en do majeur ou la mineur)/)).toBeVisible();
+  const draw = page.getByRole("button", { name: /^(Tirer|Nouveau tirage)$/ });
+  await expect(async () => {
+    await draw.click();
+    await expect(page.getByRole("listitem").filter({ hasText: "Progression" })).toBeVisible({ timeout: 500 });
+  }).toPass();
+  for (let i = 0; i < 5; i += 1) {
+    const chords = await page.getByRole("listitem").filter({ hasText: "Progression" }).innerText();
+    expect(chords.split("|").length).toBeGreaterThanOrEqual(3);
+    await page.getByRole("button", { name: "Nouveau tirage" }).click();
+  }
+
+  // On peut ouvrir aux 24 tonalités et imposer le mode et le nombre d'accords.
+  await page.getByLabel("Essayer aussi d’autres tonalités").check();
+  await expect(page.getByText(/parmi les 24 tonalités/)).toBeVisible();
+  await page.getByRole("button", { name: "Mineur" }).click();
+  await page.getByRole("button", { name: "4", exact: true }).click();
+  await page.getByRole("button", { name: "Nouveau tirage" }).click();
+  await expect(page.getByRole("listitem").filter({ hasText: "Tonalité" })).toContainText(/mineur/);
+  const four = await page.getByRole("listitem").filter({ hasText: "Progression" }).innerText();
+  expect(four.split("|")).toHaveLength(4);
+});

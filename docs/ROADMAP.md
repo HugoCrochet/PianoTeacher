@@ -13,6 +13,7 @@ Production : https://piano-coach-olive.vercel.app (Vercel `dub1` + Supabase eu-w
 | 3A — Au piano (partiel) | Métronome, minuteur par tâche, écran allumé (Wake Lock), mode pupitre | 14 nov. 2026 |
 | 3B — Pédagogie visible | Cercle des 24 tonalités + tonalité du jour, passages de morceaux + passage le plus fragile, variante d'improvisation du jour, fiches de compétence | 14 nov. 2026 |
 | 3C — Voir ses progrès | Bilan de la semaine, calendrier 12 semaines, temps par domaine sur 4 semaines, records et jalons | 14 nov. 2026 |
+| Tirage d'improvisation | Tonalité + 3 ou 4 accords au hasard, limité aux tonalités maîtrisées sauf choix contraire ; page dédiée et bouton en séance | 14 nov. 2026 |
 
 Tous les critères automatisables de ces étapes sont couverts par les tests (unitaires, RLS, navigateur) et la CI passe sur `main`.
 
@@ -52,8 +53,8 @@ Tous les critères automatisables de ces étapes sont couverts par les tests (un
 
 | Type | Outil | Couvre |
 |---|---|---|
-| Unitaires | Vitest | Règles du planner (PRODUCT §6), BPM, statuts de compétences et de passages, tonalités, variante d'improvisation, bilan, jalons, outils de séance |
+| Unitaires | Vitest | Règles du planner (PRODUCT §6), BPM, statuts de compétences et de passages, tonalités, variante d'improvisation, tirage au hasard, bilan, jalons, outils de séance |
 | RLS | pgTAP / Supabase local | Propriétaire, autre utilisateur, anonyme — tables (dont passages) et Storage |
 | PDF | Vitest + manuel | Type MIME, taille, chemin, accès non autorisé, URL signée expirée |
-| E2E | Playwright, Supabase local | Connexion → séance (minuteur, métronome, pupitre) → résultat + BPM → progression ; répertoire, PDF, passages ; programme ; parcours et fiches ; responsive |
+| E2E | Playwright, Supabase local | Connexion → séance (minuteur, métronome, pupitre) → résultat + BPM → progression ; répertoire, PDF, passages ; programme ; parcours et fiches ; tirage d'improvisation ; responsive |
 | Visuel | Manuel + captures Playwright | 390 px, iPad portrait/paysage, desktop |

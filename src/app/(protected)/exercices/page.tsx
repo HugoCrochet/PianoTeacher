@@ -1,8 +1,8 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { Piano } from "lucide-react";
+import { Piano, Shuffle } from "lucide-react";
 import { BackLink, EmptyState, List, PageHead, Row, Screen } from "@/components/layout/page";
-import { Button } from "@/components/ui/button";
+import { Button, buttonVariants } from "@/components/ui/button";
 import { Input, Label, Select } from "@/components/ui/field";
 import { DOMAIN_LABEL, EXERCISE_DOMAINS, isExerciseDomain, type ExerciseDomain } from "@/lib/domain/domains";
 import { getContext } from "@/features/profile/server/profile";
@@ -48,6 +48,10 @@ export default async function ExercisesPage({ searchParams }: PageProps<"/exerci
     <Screen>
       <BackLink />
       <PageHead icon={Piano} tint="peach" title="Exercices" subtitle="Des exercices courts, choisis selon ton niveau." />
+      <Link href="/improvisation" className={buttonVariants({ variant: "outline", size: "md", className: "mb-7 self-start" })}>
+        <Shuffle size={18} aria-hidden />
+        Tirage d’improvisation
+      </Link>
 
       <form method="get" role="search" className="mb-7 grid max-w-[760px] grid-cols-2 gap-3 md:grid-cols-5">
         <div className="col-span-2 md:col-span-5">

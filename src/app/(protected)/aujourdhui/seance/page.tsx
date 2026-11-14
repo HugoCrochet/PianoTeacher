@@ -5,6 +5,8 @@ import { SubmitButton } from "@/components/forms/action-form";
 import { BackLink, EmptyState, List, PageHead, Row, Screen } from "@/components/layout/page";
 import { buttonVariants } from "@/components/ui/button";
 import { DOMAIN_LABEL } from "@/lib/domain/domains";
+import { loadKeyStatuses } from "@/features/curriculum/server/keys";
+import { ImprovDraw } from "@/features/practice/improv-draw";
 import { SessionDesk } from "@/features/practice/session-desk";
 import { SessionStage } from "@/features/practice/session-stage";
 import { finishSession, skipTask } from "@/features/practice/server/actions";
@@ -17,6 +19,7 @@ export default async function SessionPage() {
   const { supabase, today } = await getContext();
   const [tasks, logs] = await Promise.all([getTasks(supabase, today), getLogs(supabase, today)]);
   const current = tasks.find((t) => t.status === "planned");
+  const keyStatuses = current?.improvisation ? await loadKeyStatuses(supabase) : null;
   const handled = tasks.filter((t) => t.status !== "planned").length;
   const remainingMinutes = tasks.filter((t) => t.status === "planned").reduce((s, t) => s + t.plannedMinutes, 0);
 
@@ -85,6 +88,12 @@ export default async function SessionPage() {
                 <Row main="Rythme" detail={current.improvisation.rhythm} />
                 <Row main="Objectif" detail={current.improvisation.goal} />
               </List>
+              {keyStatuses ? (
+                <div className="mt-5">
+                  <p className="mb-2 text-[17px] text-ink-2">Envie d’autre chose ? Tire une tonalité et une grille au hasard.</p>
+                  <ImprovDraw statuses={keyStatuses} compact />
+                </div>
+              ) : null}
             </div>
           ) : null}
           <p className="text-[15px] text-ink-2">
