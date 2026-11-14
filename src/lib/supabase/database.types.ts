@@ -237,14 +237,14 @@ isOneToOne: false
                   ]
                 },"repertoire_catalog": {
                   Row: {
-                    "composer": string,"id": string,"level": number,"rights_note": string,"slug": string,"source_type": string,"source_url": string | null,"style": string,"tier": string,"title": string
+                    "composer": string,"id": string,"level": number,"period": string | null,"rights_note": string,"slug": string,"source_type": string,"source_url": string | null,"style": string,"tier": string,"title": string
                   }
                   ComputedFields: never
                   Insert: {
-                    "composer": string,"id"?: string,"level": number,"rights_note"?: string,"slug": string,"source_type": string,"source_url"?: string | null,"style": string,"tier": string,"title": string
+                    "composer": string,"id"?: string,"level": number,"period"?: string | null,"rights_note"?: string,"slug": string,"source_type": string,"source_url"?: string | null,"style": string,"tier": string,"title": string
                   }
                   Update: {
-                    "composer"?: string,"id"?: string,"level"?: number,"rights_note"?: string,"slug"?: string,"source_type"?: string,"source_url"?: string | null,"style"?: string,"tier"?: string,"title"?: string
+                    "composer"?: string,"id"?: string,"level"?: number,"period"?: string | null,"rights_note"?: string,"slug"?: string,"source_type"?: string,"source_url"?: string | null,"style"?: string,"tier"?: string,"title"?: string
                   }
                   Relationships: [
                     
@@ -271,14 +271,14 @@ isOneToOne: false
                   ]
                 },"user_repertoire": {
                   Row: {
-                    "catalog_id": string | null,"composer": string,"created_at": string,"current_step": string,"felt_difficulty": number | null,"id": string,"level": number | null,"notes": string,"pdf_asset_id": string | null,"source_url": string | null,"status": string,"style": string,"tier": string,"title": string,"updated_at": string,"user_id": string
+                    "catalog_id": string | null,"composer": string,"created_at": string,"current_step": string,"felt_difficulty": number | null,"id": string,"level": number | null,"notes": string,"pdf_asset_id": string | null,"period": string | null,"source_url": string | null,"status": string,"style": string,"tier": string,"title": string,"updated_at": string,"user_id": string
                   }
                   ComputedFields: never
                   Insert: {
-                    "catalog_id"?: string | null,"composer"?: string,"created_at"?: string,"current_step"?: string,"felt_difficulty"?: number | null,"id"?: string,"level"?: number | null,"notes"?: string,"pdf_asset_id"?: string | null,"source_url"?: string | null,"status"?: string,"style"?: string,"tier"?: string,"title": string,"updated_at"?: string,"user_id": string
+                    "catalog_id"?: string | null,"composer"?: string,"created_at"?: string,"current_step"?: string,"felt_difficulty"?: number | null,"id"?: string,"level"?: number | null,"notes"?: string,"pdf_asset_id"?: string | null,"period"?: string | null,"source_url"?: string | null,"status"?: string,"style"?: string,"tier"?: string,"title": string,"updated_at"?: string,"user_id": string
                   }
                   Update: {
-                    "catalog_id"?: string | null,"composer"?: string,"created_at"?: string,"current_step"?: string,"felt_difficulty"?: number | null,"id"?: string,"level"?: number | null,"notes"?: string,"pdf_asset_id"?: string | null,"source_url"?: string | null,"status"?: string,"style"?: string,"tier"?: string,"title"?: string,"updated_at"?: string,"user_id"?: string
+                    "catalog_id"?: string | null,"composer"?: string,"created_at"?: string,"current_step"?: string,"felt_difficulty"?: number | null,"id"?: string,"level"?: number | null,"notes"?: string,"pdf_asset_id"?: string | null,"period"?: string | null,"source_url"?: string | null,"status"?: string,"style"?: string,"tier"?: string,"title"?: string,"updated_at"?: string,"user_id"?: string
                   }
                   Relationships: [
                     {
