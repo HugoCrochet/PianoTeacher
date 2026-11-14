@@ -81,6 +81,16 @@ Le comportement attendu de chaque fonctionnalité livrée est décrit dans [PROD
 3. **Consignes d'improvisation variées**, tirées de façon déterministe selon la date.
 4. **Fiches de compétence** : objectif concret, exercices liés, ce qui manque pour « Acquise ».
 
+**Fini quand**
+- [x] Le parcours affiche le cercle des 24 tonalités (jamais jouée / travaillée / bien installée), calculé sur les seuls résultats réels, avec un équivalent texte.
+- [x] Les exercices transposables reçoivent la tonalité du jour, d'abord celles jamais jouées et dans la limite du niveau, avec la raison affichée.
+- [x] Un morceau se découpe en passages (un par un ou par mesures) ; le statut et le BPM de chaque passage viennent des résultats.
+- [x] Le planner cible le passage le plus fragile et le résultat de la séance est rattaché à ce passage.
+- [x] Chaque tâche d'improvisation affiche une variante du jour déterministe (tonalité, grille, rythme, objectif).
+- [x] Chaque compétence a une fiche : objectif concret, ce qui manque pour « Acquise », exercices liés.
+- [x] RLS de la table des passages testée (propriétaire, autre utilisateur).
+- [ ] Migration appliquée au Supabase de production.
+
 ### Phase C — Voir ses progrès
 1. Calendrier de pratique, temps par domaine sur 4 semaines, courbes BPM (`recharts`).
 2. Bilan de la semaine, au ton encourageant.

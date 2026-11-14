@@ -41,7 +41,7 @@ src/
       programme/            # semaine
       exercices/[slug]/
       repertoire/[id]/      # + nouveau/ ; [id]/partition = redirection vers l'URL signée
-      parcours/
+      parcours/[slug]/      # parcours + fiche compétence
       progression/
       parametres/
       export/               # route GET : JSON complet ou CSV de l'historique
@@ -80,8 +80,8 @@ Valeurs de `domain` : `technique`, `scales_harmony`, `reading_rhythm`, `improvis
 
 | Table | Colonnes principales |
 |---|---|
-| `competencies` | `id`, `slug`, `name`, `domain`, `level`, `position`, `description` |
-| `exercises` | `id`, `slug`, `title`, `domain`, `level`, `objective`, `instructions`, `estimated_minutes`, `key_signature`, `bpm_target`, `bpm_increment`, `source_type`, `source_url` |
+| `competencies` | `id`, `slug`, `name`, `domain`, `level`, `position`, `description`, `objective` |
+| `exercises` | `id`, `slug`, `title`, `domain`, `level`, `objective`, `instructions`, `estimated_minutes`, `key_signature`, `key_mode` (`major`/`minor` = transposable par le planner), `bpm_target`, `bpm_increment`, `source_type`, `source_url` |
 | `exercise_competencies` | `exercise_id`, `competency_id`, `weight` |
 | `repertoire_catalog` | `id`, `slug`, `title`, `composer`, `style`, `level`, `tier`, `source_type`, `source_url`, `rights_note` |
 
@@ -94,14 +94,16 @@ Valeurs de `domain` : `technique`, `scales_harmony`, `reading_rhythm`, `improvis
 | `profiles` | `id` (= auth.users), `display_name`, `timezone`, `weekday_minutes` (25), `weekend_minutes` (60), `practice_days`, `show_streak`, `domain_preferences jsonb` (0 moins · 1 normal · 2 plus), `self_assessment jsonb` (niveau 1–3 par domaine), `challenge_level` (`gentle`/`balanced`/`ambitious`), `onboarded_at` |
 | `user_competencies` | `user_id`, `competency_id`, `status` (`upcoming`/`learning`/`consolidating`/`acquired`), `last_practiced_at` |
 | `user_repertoire` | `id`, `user_id`, `catalog_id?`, `title`, `composer`, `style`, `level`, `felt_difficulty`, `tier` (`comfort`/`growth`/`challenge`), `status` (`to_discover`/`active`/`paused`/`completed`), `current_step`, `notes`, `source_url`, `pdf_asset_id?` |
+| `piece_passages` | `id`, `user_id`, `user_repertoire_id`, `position`, `label`, `target_bpm?` |
 | `practice_plans` | `id`, `user_id`, `week_start`, `planner_version`, `generated_at`, `settings_snapshot jsonb` |
-| `planned_tasks` | `id`, `plan_id`, `user_id`, `task_date`, `position`, `domain`, `exercise_id?`, `user_repertoire_id?`, `planned_minutes`, `target_bpm?`, `reason`, `status` (`planned`/`done`/`skipped`), `is_user_modified` |
+| `planned_tasks` | `id`, `plan_id`, `user_id`, `task_date`, `position`, `domain`, `exercise_id?`, `user_repertoire_id?`, `planned_minutes`, `target_bpm?`, `key_signature?`, `passage_id?`, `reason`, `status` (`planned`/`done`/`skipped`), `is_user_modified` |
 | `practice_sessions` | une par jour : `id`, `user_id`, `session_date`, `status` (`in_progress`/`completed`), `started_at`, `ended_at`, `actual_minutes` |
-| `practice_logs` | `id`, `user_id`, `session_id`, `planned_task_id?`, `domain`, `exercise_id?`, `user_repertoire_id?`, `practiced_at`, `practice_date` (date locale), `actual_minutes`, `bpm?`, `result` (`success`/`retry`) |
+| `practice_logs` | `id`, `user_id`, `session_id`, `planned_task_id?`, `domain`, `exercise_id?`, `user_repertoire_id?`, `practiced_at`, `practice_date` (date locale), `actual_minutes`, `bpm?`, `key_signature?`, `passage_id?`, `result` (`success`/`retry`) |
 | `pdf_assets` | `id`, `user_id`, `storage_path`, `original_filename`, `mime_type`, `size_bytes` |
 
 Règles :
 - `planned_tasks` et `practice_logs` référencent exactement un exercice **ou** un morceau (contrainte `CHECK`).
+- `key_signature` : une des 24 tonalités (`lib/domain/keys.ts`), contrainte `CHECK`. `passage_id` : clé composite `(passage_id, user_id)`, `ON DELETE SET NULL (passage_id)` ; seulement sur une tâche ou un log de répertoire. Le résultat recopie la tonalité et le passage de la tâche.
 - **Planifié ≠ réalisé** : seuls les `practice_logs` comptent dans les statistiques. Une séance interrompue reste `in_progress` et peut être reprise ; une tâche non faite reste `planned` puis est ignorée.
 - Libellés UI : `success` = « Réussi », `retry` = « À retravailler ».
 

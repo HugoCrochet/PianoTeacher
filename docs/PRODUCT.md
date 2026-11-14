@@ -62,6 +62,7 @@ Catalogue filtrable par domaine, niveau, tonalité et durée. Fiche : titre, dom
 - Niveau d'usage : `Confort`, `Progression`, `Challenge`.
 - Statut : `À découvrir`, `En cours`, `En pause`, `Terminé`.
 - Champs : titre, compositeur, style, difficulté estimée et ressentie, étape en cours (ex. « mesures 9 à 16 »), notes, lien, PDF.
+- **Passages** : un morceau peut être découpé en passages (ajout un par un, ou « découper par mesures » : 20 mesures par 8 → 1–8, 9–16, 17–20), chacun avec un tempo visé optionnel. Statut d'après les résultats : `Pas encore travaillé`, `En travail`, `Solide` (au moins 3 réussites dont les 2 dernières). Affichage : dernier BPM « 54 sur 60 visés ». Supprimer un passage garde l'historique.
 - Viser 1–2 pièces en cours + éventuellement 1 challenge (indicatif, pas une limite).
 - Priorité de style : classique, puis musiques de film, puis le reste.
 
@@ -70,6 +71,11 @@ Import d'un PDF personnel, rattaché à un morceau, consultation dans le navigat
 
 ### Parcours pédagogique
 Suite ordonnée de **compétences** par niveau (ex. « Niveau 2 — lecture en clé de fa : les notes sous la portée »). Chaque compétence a un statut (`À venir`, `En cours`, `En consolidation`, `Acquise`) calculé à partir des résultats des exercices qui la travaillent. Le parcours alimente le planner ; il ne contient pas de leçons rédigées au MVP.
+- **Fiche compétence** : objectif concret, description, ce qui manque pour `Acquise` critère par critère (réussites au total, jours différents, réussites d'affilée) et exercices liés avec leur dernier résultat.
+- **Les 12 tonalités** : cercle des quintes (majeures à l'extérieur, relatives mineures à l'intérieur) avec trois états, `Jamais jouée`, `Travaillée`, `Bien installée` (au moins 3 réussites). Ne compte que les résultats réels en gammes et harmonie, avec la tonalité de l'exercice ou celle imposée par le planner. Les prochaines tonalités à découvrir sont listées en texte.
+
+### Improvisation : variante du jour
+Chaque tâche d'improvisation affiche une variante : tonalité, grille (accords écrits dans la tonalité et degrés), contrainte rythmique et objectif. Tirage déterministe à partir de la date et de l'exercice (même jour → même variante), limité au niveau de l'exercice.
 
 ### Progression
 Temps de pratique par jour et par semaine, nombre de séances, historique des résultats, courbe BPM par exercice ou morceau, domaines travaillés, compétences en cours. Uniquement à partir des **logs réels**, jamais des tâches planifiées. Pas de score global, pas de mesure de précision ou de timing.
@@ -94,6 +100,8 @@ Le planner est une fonction pure et déterministe : mêmes entrées → même pl
 8. **Raison** : chaque tâche explique sa présence (ex. « à revoir après deux séances non validées », « +4 BPM après 3 réussites »).
 9. **Contrôle utilisateur** : une tâche modifiée à la main n'est jamais écrasée par une régénération sans confirmation explicite.
 10. **Premier lancement** : sans historique, produire un plan cohérent à partir du seed et de l'auto-évaluation.
+11. **Tonalités** : un exercice transposable reçoit la tonalité du jour — d'abord une tonalité jamais jouée (la plus simple), sinon la moins travaillée puis la plus ancienne, sans doublon dans la semaine si possible. Altérations ouvertes selon le niveau en gammes : 2 (niveau 1), 4 (niveau 2), toutes (niveau 3).
+12. **Passages** : pour un morceau découpé, la tâche cible le passage le plus fragile : raté la dernière fois, puis en travail (le moins de réussites), puis le suivant jamais travaillé dans l'ordre du morceau, enfin les passages solides en entretien. Le tempo visé du passage devient le BPM cible.
 
 ## 7. Contenu et droits
 
