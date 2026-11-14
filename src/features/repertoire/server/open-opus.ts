@@ -56,7 +56,7 @@ async function getJson(path: string): Promise<unknown> {
 }
 
 function toComposer(c: z.infer<typeof composerSchema>): FoundComposer {
-  return { id: c.id, name: c.complete_name ?? c.name, period: periodFromEpoch(c.epoch), lifespan: lifespan(c.birth, c.death) };
+  return { id: c.id, name: c.complete_name ?? c.name, period: periodFromEpoch(c.epoch, c.complete_name ?? c.name), lifespan: lifespan(c.birth, c.death) };
 }
 
 function toWork(w: z.infer<typeof workSchema>, composer: FoundComposer): FoundWork {

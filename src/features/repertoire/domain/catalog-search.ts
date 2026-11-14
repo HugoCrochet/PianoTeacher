@@ -3,31 +3,15 @@
  * Fonctions pures, sans réseau (docs/adr/0002-recherche-oeuvres-open-opus.md).
  */
 
-export const PERIODS = [
-  "medieval",
-  "renaissance",
-  "baroque",
-  "classical",
-  "early_romantic",
-  "romantic",
-  "late_romantic",
-  "twentieth_century",
-  "post_war",
-  "twenty_first_century",
-] as const;
+/** Courants regroupés en quatre familles, volontairement simples. */
+export const PERIODS = ["baroque", "classical", "romantic", "modern"] as const;
 export type Period = (typeof PERIODS)[number];
 
 export const PERIOD_LABEL: Record<Period, string> = {
-  medieval: "Médiéval",
-  renaissance: "Renaissance",
   baroque: "Baroque",
   classical: "Classique",
-  early_romantic: "Premier romantisme",
   romantic: "Romantique",
-  late_romantic: "Romantisme tardif",
-  twentieth_century: "XXe siècle",
-  post_war: "Après-guerre",
-  twenty_first_century: "XXIe siècle",
+  modern: "Moderne",
 };
 
 export function isPeriod(value: unknown): value is Period {
@@ -35,21 +19,53 @@ export function isPeriod(value: unknown): value is Period {
 }
 
 const EPOCHS: Record<string, Period> = {
-  Medieval: "medieval",
-  Renaissance: "renaissance",
   Baroque: "baroque",
   Classical: "classical",
-  "Early Romantic": "early_romantic",
+  "Early Romantic": "romantic",
   Romantic: "romantic",
-  "Late Romantic": "late_romantic",
-  "20th Century": "twentieth_century",
-  "Post-War": "post_war",
-  "21st Century": "twenty_first_century",
+  "Late Romantic": "romantic",
+  "20th Century": "modern",
+  "Post-War": "modern",
+  "21st Century": "modern",
 };
 
-/** Époque Open Opus → courant de l'application (null si inconnue). */
-export function periodFromEpoch(epoch: string | null | undefined): Period | null {
-  return (epoch && EPOCHS[epoch.trim()]) || null;
+/** Compositeurs qu'Open Opus classe « Late Romantic » mais qu'on range en « Moderne ». */
+const MODERN_COMPOSERS = ["debussy", "ravel", "satie"];
+
+/** Époque Open Opus → courant de l'application (null si inconnue ou antérieure au baroque). */
+export function periodFromEpoch(epoch: string | null | undefined, composer = ""): Period | null {
+  const period = (epoch && EPOCHS[epoch.trim()]) || null;
+  if (period === "romantic" && MODERN_COMPOSERS.some((name) => composer.toLowerCase().includes(name))) return "modern";
+  return period;
+}
+
+/* ---------------------------------------------------------------------------
+ * Genre : la seule classification montrée à l'utilisateur.
+ * En base : `style` (classical / film / other) + `period` (courant, pour le classique).
+ * ------------------------------------------------------------------------- */
+
+export const GENRES = [...PERIODS, "film", "other"] as const;
+export type Genre = (typeof GENRES)[number];
+
+export const GENRE_LABEL: Record<Genre, string> = {
+  ...PERIOD_LABEL,
+  film: "Musique de film",
+  other: "Autre",
+};
+
+export function isGenre(value: unknown): value is Genre {
+  return typeof value === "string" && (GENRES as readonly string[]).includes(value);
+}
+
+export function genreOf(style: string, period: string | null): Genre {
+  if (style === "film") return "film";
+  return style === "classical" && isPeriod(period) ? period : "other";
+}
+
+export function genreColumns(genre: Genre): { style: "classical" | "film" | "other"; period: Period | null } {
+  if (genre === "film") return { style: "film", period: null };
+  if (genre === "other") return { style: "other", period: null };
+  return { style: "classical", period: genre };
 }
 
 /* ---------------------------------------------------------------------------
@@ -235,6 +251,6 @@ export function prefillParams(work: FoundWork): URLSearchParams {
     compositeur: work.composer,
     partition: imslpSearchUrl(work.composer, work.originalTitle),
   });
-  if (work.period) params.set("courant", work.period);
+  if (work.period) params.set("genre", work.period);
   return params;
 }

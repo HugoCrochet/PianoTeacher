@@ -1,5 +1,8 @@
 import { describe, expect, it } from "vitest";
 import {
+  GENRES,
+  genreColumns,
+  genreOf,
   imslpSearchUrl,
   isImslpUrl,
   lifespan,
@@ -52,11 +55,22 @@ describe("translateQuery", () => {
 });
 
 describe("outils", () => {
-  it("traduit les époques d'Open Opus en courants", () => {
-    expect(periodFromEpoch("Late Romantic")).toBe("late_romantic");
-    expect(periodFromEpoch("20th Century")).toBe("twentieth_century");
-    expect(periodFromEpoch("Inconnue")).toBeNull();
+  it("regroupe les époques d'Open Opus en quatre courants", () => {
+    expect(periodFromEpoch("Early Romantic")).toBe("romantic");
+    expect(periodFromEpoch("Late Romantic", "Gustav Mahler")).toBe("romantic");
+    expect(periodFromEpoch("Late Romantic", "Claude Debussy")).toBe("modern");
+    expect(periodFromEpoch("20th Century")).toBe("modern");
+    expect(periodFromEpoch("Renaissance")).toBeNull();
     expect(periodFromEpoch(null)).toBeNull();
+  });
+
+  it("résume style et courant en un seul genre, dans les deux sens", () => {
+    expect(genreOf("classical", "romantic")).toBe("romantic");
+    expect(genreOf("film", null)).toBe("film");
+    expect(genreOf("classical", null)).toBe("other");
+    expect(genreColumns("baroque")).toEqual({ style: "classical", period: "baroque" });
+    expect(genreColumns("film")).toEqual({ style: "film", period: null });
+    for (const g of GENRES) expect(genreOf(genreColumns(g).style, genreColumns(g).period)).toBe(g);
   });
 
   it("construit un lien de recherche IMSLP", () => {
@@ -91,7 +105,7 @@ describe("outils", () => {
     const p = prefillParams(work("17270", "Valse en la mineur, B.150", true, "Waltz in A minor, B.150"));
     expect(p.get("titre")).toBe("Valse en la mineur, B.150");
     expect(p.get("compositeur")).toBe("Frédéric Chopin");
-    expect(p.get("courant")).toBe("romantic");
+    expect(p.get("genre")).toBe("romantic");
     expect(p.get("partition")).toContain("imslp.org");
   });
 });
