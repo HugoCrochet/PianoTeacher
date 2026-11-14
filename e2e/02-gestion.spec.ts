@@ -29,8 +29,23 @@ test("répertoire : suggestion, partition PDF privée, suppression", async ({ pa
   await expect(page.getByRole("link", { name: "Ouvrir la partition" })).toBeVisible();
   await expect(page.getByText(/ma-partition\.pdf/)).toBeVisible();
 
-  // Lecture par URL signée pour le propriétaire…
-  const href = await page.getByRole("link", { name: "Ouvrir la partition" }).getAttribute("href");
+  // Lecture dans l'app : la page 1 est dessinée par le lecteur intégré.
+  const pieceUrl = page.url().split("?")[0];
+  await page.getByRole("link", { name: "Ouvrir la partition" }).click();
+  await expect(page).toHaveURL(/\/lecture$/);
+  await expect(page.getByText("1 page")).toBeVisible({ timeout: 15000 });
+  await expect(page.getByRole("img", { name: "Page 1" })).toBeVisible();
+  const painted = await page.getByRole("img", { name: "Page 1" }).evaluate((c) => (c as HTMLCanvasElement).width > 0);
+  expect(painted).toBe(true);
+  await page.goto(pieceUrl);
+
+  // Pastille « Partition » dans la liste.
+  await page.goto("/repertoire");
+  await expect(page.getByText("Partition", { exact: true }).first()).toBeVisible();
+  await page.goto(pieceUrl);
+
+  // Lecture par URL signée (nouvel onglet) pour le propriétaire…
+  const href = `${new URL(pieceUrl).pathname}/partition`;
   const opened = await page.request.get(href!);
   expect(opened.status()).toBe(200);
   expect(opened.headers()["content-type"]).toContain("application/pdf");

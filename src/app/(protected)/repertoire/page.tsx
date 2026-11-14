@@ -8,6 +8,7 @@ import { Input, Label, Select } from "@/components/ui/field";
 import type { PieceStatus } from "@/lib/domain/domains";
 import { cn } from "@/lib/utils";
 import { GENRE_LABEL, genreOf, isGenre } from "@/features/repertoire/domain/catalog-search";
+import { PieceInfo } from "@/features/repertoire/piece-info";
 import {
   SORT_LABEL,
   SORTS,
@@ -206,14 +207,7 @@ export default async function RepertoirePage({ searchParams }: PageProps<"/reper
                       {p.title}
                     </Link>
                   }
-                  detail={[
-                    p.composer,
-                    g !== "other" ? GENRE_LABEL[g] : null,
-                    p.level ? `difficulté ${p.level} sur 5` : null,
-                    p.hasPdf ? "partition" : null,
-                  ]
-                    .filter(Boolean)
-                    .join(" · ")}
+                  detail={<PieceInfo composer={p.composer} genre={g} level={p.level} hasScore={p.hasPdf} />}
                   meta={
                     status === "to_discover" || status === "paused" ? (
                       <form action={setPieceStatus}>

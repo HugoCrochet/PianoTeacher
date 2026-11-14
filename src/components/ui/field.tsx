@@ -4,6 +4,7 @@ import type {
   SelectHTMLAttributes,
   TextareaHTMLAttributes,
 } from "react";
+import { ChevronDown } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 const control =
@@ -17,8 +18,19 @@ export function Input({ className, ...props }: InputHTMLAttributes<HTMLInputElem
   return <input className={cn(control, className)} {...props} />;
 }
 
+/** Liste déroulante : chevron dessiné par nous, à la même marge que le texte. */
 export function Select({ className, ...props }: SelectHTMLAttributes<HTMLSelectElement>) {
-  return <select className={cn(control, "appearance-auto", className)} {...props} />;
+  return (
+    <div className="relative">
+      <select className={cn(control, "appearance-none pr-11", className)} {...props} />
+      <ChevronDown
+        size={18}
+        strokeWidth={1.8}
+        aria-hidden
+        className="pointer-events-none absolute top-1/2 right-4 -translate-y-1/2 text-ink-2"
+      />
+    </div>
+  );
 }
 
 export function Textarea({ className, ...props }: TextareaHTMLAttributes<HTMLTextAreaElement>) {

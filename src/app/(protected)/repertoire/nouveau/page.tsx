@@ -7,7 +7,6 @@ import { Button, buttonVariants } from "@/components/ui/button";
 import { Input, Label } from "@/components/ui/field";
 import { cn } from "@/lib/utils";
 import {
-  GENRE_LABEL,
   PERIOD_LABEL,
   genreOf,
   isGenre,
@@ -17,6 +16,7 @@ import {
   type FoundWork,
 } from "@/features/repertoire/domain/catalog-search";
 import { PieceFields } from "@/features/repertoire/piece-fields";
+import { PieceInfo } from "@/features/repertoire/piece-info";
 import { addFromCatalog, createPiece } from "@/features/repertoire/server/actions";
 import { composerKeyboardWorks, searchWorks, type SearchOutcome } from "@/features/repertoire/server/open-opus";
 import { getContext } from "@/features/profile/server/profile";
@@ -240,8 +240,8 @@ export default async function NewPiecePage({ searchParams }: PageProps<"/reperto
                       main={c.title}
                       detail={
                         <>
-                          {[c.composer, g !== "other" ? GENRE_LABEL[g] : null, `difficulté ${c.level} sur 5`].filter(Boolean).join(" · ")}
-                          <span className="block">{c.rights_note}</span>
+                          <PieceInfo composer={c.composer} genre={g} level={c.level} />
+                          <span className="mt-0.5 block">{c.rights_note}</span>
                         </>
                       }
                     >

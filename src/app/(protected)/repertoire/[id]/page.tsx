@@ -1,16 +1,18 @@
 import type { Metadata } from "next";
+import Link from "next/link";
 import { notFound } from "next/navigation";
-import { Music } from "lucide-react";
+import { BookOpen, Music } from "lucide-react";
 import { z } from "zod";
 import { ActionForm, SubmitButton } from "@/components/forms/action-form";
 import { BackLink, Disclosure, List, PageHead, Panel, Row, Screen, SectionTitle } from "@/components/layout/page";
 import { Button, buttonVariants } from "@/components/ui/button";
 import { formatShortDate } from "@/lib/dates";
 import { PIECE_STATUS_LABEL, RESULT_LABEL, type PieceStatus, type PracticeResult } from "@/lib/domain/domains";
-import { GENRE_LABEL, genreOf, isImslpUrl } from "@/features/repertoire/domain/catalog-search";
+import { genreOf, isImslpUrl } from "@/features/repertoire/domain/catalog-search";
 import { STATUS_TABS } from "@/features/repertoire/domain/library";
 import { getContext } from "@/features/profile/server/profile";
 import { PdfUpload } from "@/features/repertoire/pdf-upload";
+import { PieceInfo } from "@/features/repertoire/piece-info";
 import { PieceFields } from "@/features/repertoire/piece-fields";
 import { Input, Label } from "@/components/ui/field";
 import {
@@ -75,14 +77,10 @@ export default async function PiecePage({ params, searchParams }: PageProps<"/re
         icon={Music}
         tint="butter"
         title={piece.title}
-        subtitle={[
-          piece.composer,
-          genre !== "other" ? GENRE_LABEL[genre] : null,
-          piece.level ? `difficulté ${piece.level} sur 5` : null,
-        ]
-          .filter(Boolean)
-          .join(" · ")}
       />
+      <p className="-mt-4 mb-7 text-[17px] text-ink-2 md:ml-[82px]">
+        <PieceInfo composer={piece.composer} genre={genre} level={piece.level} hasScore={Boolean(piece.pdf)} />
+      </p>
 
       {justAdded ? (
         <div className="mb-6">
@@ -135,40 +133,17 @@ export default async function PiecePage({ params, searchParams }: PageProps<"/re
         <SectionTitle>Partition</SectionTitle>
       </div>
       {piece.pdf ? (
-        <>
-          <div className="mb-4 max-w-[760px]">
-            <a
-              href={`/repertoire/${piece.id}/partition`}
-              target="_blank"
-              rel="noreferrer"
-              className={buttonVariants({ className: "self-start" })}
-            >
-              Ouvrir la partition
-            </a>
-            <p className="mt-3 text-[15px] text-ink-2">
-              {piece.pdf.original_filename} ·{" "}
-              {piece.pdf.size_bytes < 104_858 ? "moins de 0,1" : (piece.pdf.size_bytes / 1_048_576).toFixed(1).replace(".", ",")} Mo · ajoutée
-              le{" "}
-              {formatShortDate(piece.pdf.created_at.slice(0, 10))}
-            </p>
-          </div>
-          <div className="max-w-[760px] border-t-[1.5px] border-line">
-            <Disclosure summary="Remplacer ou supprimer la partition">
-              <PdfUpload pieceId={piece.id} userId={user.id} hasPdf />
-              <ActionForm action={deletePdf} className="mt-7">
-                <input type="hidden" name="id" value={piece.id} />
-                <p className="mb-1 text-[17px] font-bold">Supprimer la partition</p>
-                <label className="flex min-h-11 items-center gap-3 text-[17px]">
-                  <input type="checkbox" name="confirm" className="size-5 flex-none accent-ink" />
-                  Je confirme : le fichier PDF sera supprimé, le morceau et son historique restent.
-                </label>
-                <SubmitButton variant="danger" size="md" className="mt-2" pendingLabel="Suppression…">
-                  Supprimer la partition
-                </SubmitButton>
-              </ActionForm>
-            </Disclosure>
-          </div>
-        </>
+        <div className="max-w-[760px]">
+          <Link href={`/repertoire/${piece.id}/lecture`} className={buttonVariants()}>
+            <BookOpen size={20} aria-hidden />
+            Ouvrir la partition
+          </Link>
+          <p className="mt-3 text-[15px] text-ink-2">
+            {piece.pdf.original_filename} ·{" "}
+            {piece.pdf.size_bytes < 104_858 ? "moins de 0,1" : (piece.pdf.size_bytes / 1_048_576).toFixed(1).replace(".", ",")} Mo · ajoutée
+            le {formatShortDate(piece.pdf.created_at.slice(0, 10))}
+          </p>
+        </div>
       ) : (
         <>
           {isImslpUrl(piece.source_url) ? (
@@ -328,6 +303,22 @@ export default async function PiecePage({ params, searchParams }: PageProps<"/re
             </SubmitButton>
           </ActionForm>
         </Disclosure>
+        {piece.pdf ? (
+          <Disclosure summary="Remplacer ou supprimer la partition">
+            <PdfUpload pieceId={piece.id} userId={user.id} hasPdf />
+            <ActionForm action={deletePdf} className="mt-7">
+              <input type="hidden" name="id" value={piece.id} />
+              <p className="mb-1 text-[17px] font-bold">Supprimer la partition</p>
+              <label className="flex min-h-11 items-center gap-3 text-[17px]">
+                <input type="checkbox" name="confirm" className="size-5 flex-none accent-ink" />
+                Je confirme : le fichier PDF sera supprimé, le morceau et son historique restent.
+              </label>
+              <SubmitButton variant="danger" size="md" className="mt-2" pendingLabel="Suppression…">
+                Supprimer la partition
+              </SubmitButton>
+            </ActionForm>
+          </Disclosure>
+        ) : null}
         <Disclosure summary="Supprimer ce morceau">
           <ActionForm action={deletePiece}>
             <input type="hidden" name="id" value={piece.id} />

@@ -117,7 +117,7 @@ test("répertoire : ajout pré-rempli, statut en un geste, liste filtrable", asy
   await expect(page.getByText("Morceau ajouté")).toBeVisible();
   await expect(page.getByRole("link", { name: "Trouver la partition sur IMSLP" })).toHaveAttribute("href", search);
   await expect(page.getByRole("heading", { level: 1 })).toHaveText("Valse en la mineur, B.150");
-  await expect(page.getByText("Frédéric Chopin · Romantique")).toBeVisible();
+  await expect(page.getByRole("main")).toContainText(/Frédéric Chopin\s*·\s*Romantique/);
   await expect(page.getByRole("button", { name: /À découvrir/ })).toHaveAttribute("aria-pressed", "true");
   // Les actions rares sont repliées.
   await expect(page.getByRole("button", { name: "Supprimer définitivement" })).toBeHidden();
@@ -125,7 +125,7 @@ test("répertoire : ajout pré-rempli, statut en un geste, liste filtrable", asy
   // Liste : onglet « À découvrir », recherche sans accents, puis « Commencer » en un geste.
   await page.goto("/repertoire?onglet=a-decouvrir");
   const row = page.getByRole("listitem").filter({ hasText: "Valse en la mineur, B.150" });
-  await expect(row).toContainText("Frédéric Chopin · Romantique");
+  await expect(row).toContainText(/Frédéric Chopin\s*·\s*Romantique/);
   await page.goto("/repertoire?onglet=a-decouvrir&q=VALSE+chopin");
   await expect(row).toBeVisible();
   await page.goto("/repertoire?onglet=a-decouvrir&q=mozart");
