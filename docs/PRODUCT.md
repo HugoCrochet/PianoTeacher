@@ -58,14 +58,16 @@ Salutation, durée de la séance du jour, série de jours (affichage désactivab
 Catalogue filtrable par domaine, niveau, tonalité et durée. Fiche : titre, domaine, niveau, objectif, consigne, durée indicative, tonalité, BPM cible et incrément BPM optionnels, ressource/lien, provenance. Action « Ajouter au programme ».
 
 ### Répertoire
-- Suggestions curées + ajout libre de pièces personnelles.
-- **Recherche d'œuvres** dans « Ajouter un morceau » (Open Opus, répertoire classique pour clavier — voir [ADR 0002](adr/0002-recherche-oeuvres-open-opus.md)) : recherche par compositeur ou titre, en français ou en anglais ; liste des œuvres pour piano d'un compositeur ; œuvres populaires d'abord. « Choisir » pré-remplit titre (traduit en français pour les formes courantes), compositeur, courant et lien de recherche IMSLP ; tout reste modifiable. Si le service ne répond pas, la saisie manuelle reste possible.
-- Statut : `À découvrir`, `En cours`, `En pause`, `Terminé`.
-- Champs : titre, compositeur, style, **courant** (Baroque, Classique, Romantique…), difficulté estimée, étape en cours (ex. « mesures 9 à 16 »), notes, lien, PDF.
-- Filtre par courant dans la liste des morceaux (dès que deux courants sont présents).
-- Après l'ajout, la fiche s'ouvre sur la section Partition : bouton « Trouver la partition sur IMSLP » (l'utilisateur choisit une édition libre de droits), puis import du PDF. Aucune partition n'est téléchargée automatiquement.
-- Viser 1–2 pièces en cours (indicatif, pas une limite).
-- Priorité de style : classique, puis musiques de film, puis le reste.
+- **Liste** : bouton « Ajouter un morceau » en haut ; onglets par statut avec compteurs (`En cours`, `À découvrir`, `En pause`, `Terminés`) ; filtre par **genre** ; à partir de 8 morceaux dans l'onglet, recherche (titre ou compositeur, sans accents) et tri (titre, compositeur, difficulté). Bouton « Commencer » / « Reprendre » sur chaque morceau à découvrir ou en pause.
+- **Genre** : seule classification visible — `Baroque`, `Classique`, `Romantique`, `Moderne`, `Musique de film`, `Autre`.
+- **Ajouter un morceau**, trois façons :
+  - *Rechercher* une œuvre classique pour clavier (Open Opus — [ADR 0002](adr/0002-recherche-oeuvres-open-opus.md)), en français ou en anglais ; œuvres d'un compositeur ; populaires d'abord. « Choisir » ouvre la fiche pré-remplie (titre traduit, compositeur, genre, lien de recherche IMSLP), seule à l'écran et modifiable.
+  - *Suggestions* curées (ajoutées « En cours »).
+  - *Saisie libre* : seul le titre est obligatoire.
+- Champs : titre, compositeur, genre, difficulté estimée, lien, notes ; à l'ajout, « pour plus tard » ou « dès maintenant ».
+- **Fiche d'un morceau** : statut modifiable d'un geste en haut ; « Ouvrir la partition » comme action principale ; remplacer ou supprimer la partition, modifier la fiche et supprimer le morceau sont repliés, et toute suppression demande une confirmation. Sans partition : bouton « Trouver la partition sur IMSLP » puis import du PDF (jamais de téléchargement automatique).
+- **Passages** : un morceau peut être découpé en passages (« découper par mesures » : 20 mesures par 8 → 1–8, 9–16, 17–20, ou ajout à la main), chacun avec un tempo visé optionnel. Statut d'après les résultats : `Pas encore travaillé`, `En travail`, `Solide` (au moins 3 réussites dont les 2 dernières). Affichage : dernier BPM « 54 sur 60 visés ». Supprimer un passage garde l'historique.
+- Seuls les morceaux « En cours » entrent dans le programme. Viser 1–2 pièces en cours (rappel indicatif au-delà de 3, jamais une limite).
 
 ### Partitions PDF
 Import d'un PDF personnel, rattaché à un morceau, consultation dans le navigateur, remplacement et suppression. Taille max 20 Mo (configurable).

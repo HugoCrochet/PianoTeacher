@@ -14,6 +14,7 @@ Production : https://piano-coach-olive.vercel.app (Vercel `dub1` + Supabase eu-w
 | 3B — Pédagogie visible | Cercle des 24 tonalités + tonalité du jour, passages de morceaux + passage le plus fragile, variante d'improvisation du jour, fiches de compétence | 14 nov. 2026 |
 | 3C — Voir ses progrès | Bilan de la semaine, calendrier 12 semaines, temps par domaine sur 4 semaines, records et jalons | 14 nov. 2026 |
 | Recherche d'œuvres | Recherche Open Opus dans « Ajouter un morceau », fiche pré-remplie, lien IMSLP + import enchaîné, champ « Courant » et filtre ; champs « niveau d'usage » et « difficulté ressentie » retirés | 14 nov. 2026 |
+| Refonte du répertoire | Liste par statut avec recherche, tri et filtre par genre ; fiche réorganisée (statut en un geste, suppressions confirmées et repliées) ; ajout en trois onglets ; genres simplifiés | 14 nov. 2026 |
 | Tirage d'improvisation | Tonalité + 3 ou 4 accords au hasard, limité aux tonalités maîtrisées sauf choix contraire ; page dédiée et bouton en séance | 14 nov. 2026 |
 
 Tous les critères automatisables de ces étapes sont couverts par les tests (unitaires, RLS, navigateur) et la CI passe sur `main`.

@@ -94,7 +94,7 @@ Valeurs de `domain` : `technique`, `scales_harmony`, `reading_rhythm`, `improvis
 |---|---|
 | `profiles` | `id` (= auth.users), `display_name`, `timezone`, `weekday_minutes` (25), `weekend_minutes` (60), `practice_days`, `show_streak`, `domain_preferences jsonb` (0 moins · 1 normal · 2 plus), `self_assessment jsonb` (niveau 1–3 par domaine), `challenge_level` (`gentle`/`balanced`/`ambitious`), `onboarded_at` |
 | `user_competencies` | `user_id`, `competency_id`, `status` (`upcoming`/`learning`/`consolidating`/`acquired`), `last_practiced_at` |
-| `user_repertoire` | `id`, `user_id`, `catalog_id?`, `title`, `composer`, `style`, `period?` (courant, époques Open Opus), `level`, `felt_difficulty` et `tier` (hérités, plus saisis : défaut `growth`), `status` (`to_discover`/`active`/`paused`/`completed`), `current_step`, `notes`, `source_url`, `pdf_asset_id?` |
+| `user_repertoire` | `id`, `user_id`, `catalog_id?`, `title`, `composer`, `style`, `period?` (`baroque`/`classical`/`romantic`/`modern` ; avec `style`, forme le « genre » affiché), `level`, `felt_difficulty` et `tier` (hérités, plus saisis : défaut `growth`), `status` (`to_discover`/`active`/`paused`/`completed`), `current_step`, `notes`, `source_url`, `pdf_asset_id?` |
 | `piece_passages` | `id`, `user_id`, `user_repertoire_id`, `position`, `label`, `target_bpm?` |
 | `practice_plans` | `id`, `user_id`, `week_start`, `planner_version`, `generated_at`, `settings_snapshot jsonb` |
 | `planned_tasks` | `id`, `plan_id`, `user_id`, `task_date`, `position`, `domain`, `exercise_id?`, `user_repertoire_id?`, `planned_minutes`, `target_bpm?`, `key_signature?`, `passage_id?`, `reason`, `status` (`planned`/`done`/`skipped`), `is_user_modified` |

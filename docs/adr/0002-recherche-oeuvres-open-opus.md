@@ -20,7 +20,7 @@ Sources étudiées :
 1. **Recherche Open Opus côté serveur uniquement** (`features/repertoire/server/open-opus.ts`). Seuls les mots recherchés, traduits en termes anglais, sont transmis. Réponses validées par Zod (données externes non fiables), mises en cache 24 h (`fetch` + `next.revalidate`), abandon après 5 s. En cas d'échec : message « Recherche indisponible », la saisie manuelle reste possible.
 2. **Œuvres pour clavier uniquement**, populaires d'abord. Titres traduits en français pour les formes courantes (fonction pure testée) ; la difficulté reste une estimation de l'utilisateur (Open Opus ne la fournit pas).
 3. **Partition : pas de téléchargement automatique.** « Choisir » pré-remplit un lien de **recherche** IMSLP ; l'utilisateur choisit une édition libre de droits dans son pays, la télécharge et l'importe (flux PDF existant). Après l'ajout, la fiche s'ouvre sur la section Partition.
-4. **Courant** (`period`) ajouté aux morceaux et au catalogue de suggestions, aligné sur les époques d'Open Opus.
+4. **Courant** (`period`) ajouté aux morceaux et au catalogue de suggestions. Les époques d'Open Opus sont regroupées en quatre familles (baroque, classique, romantique, moderne) ; Debussy, Ravel et Satie sont rangés en « moderne ». L'interface n'affiche qu'un « genre » : ces quatre familles, musique de film, autre.
 5. Mention « Données : Open Opus » sur l'écran de recherche.
 
 ## Conséquences
